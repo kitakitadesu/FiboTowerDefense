@@ -30,6 +30,7 @@ cmake --build build     # compile
 When working on this project, AI agents should load:
 - `core/standards/code-quality.md` — modular design, clean code patterns
 - `core/standards/documentation.md` — documentation standards
+- `context/navigation.md` — target architecture, API reference, boss/powerup patterns (roadmap from completed impl)
 
 ## Project Structure
 
@@ -42,6 +43,7 @@ FiboTowerDefense/
 │   └── main.cpp          # entry point
 ├── include/              # .hpp headers
 ├── assets/               # sprites, sounds, etc.
+├── context/              # architecture, API ref, patterns
 ├── .gitignore
 └── .gitlab-ci.yml
 ```
