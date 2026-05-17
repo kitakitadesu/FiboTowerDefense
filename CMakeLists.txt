@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 project(FiboTowerDefense
     VERSION 1.0.0
-    DESCRIPTION "Tower Defense game with Fibonacci mechanics"
+    DESCRIPTION "Tower Defense game with FIBO theme"
     LANGUAGES CXX
 )
 
