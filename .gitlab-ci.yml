@@ -1,6 +1,7 @@
 stages:
   - build
   - test
+  - deploy
 
 variables:
   CMAKE_BUILD_TYPE: Release
@@ -39,3 +40,21 @@ test:build_validation:
   only:
     - merge_requests
     - main
+
+# Web build + GitLab Pages (deployed on feat/web-target branch)
+pages:
+  stage: deploy
+  image: emscripten/emsdk:3.1.73
+  script:
+    - emcmake cmake -DPLATFORM=Web -B build-web -S .
+    - cmake --build build-web -- -j$(nproc)
+    - mkdir -p public
+    - cp build-web/FiboTowerDefense.html public/index.html
+    - cp build-web/FiboTowerDefense.js public/
+    - cp build-web/FiboTowerDefense.wasm public/
+    - cp build-web/FiboTowerDefense.data public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - feat/web-target

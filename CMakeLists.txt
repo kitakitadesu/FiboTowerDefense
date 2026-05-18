@@ -56,6 +56,16 @@ else()
     target_compile_options(FiboTowerDefense PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+# ============================================================
+# Web (Emscripten) target
+# ============================================================
+if(EMSCRIPTEN)
+    set_target_properties(FiboTowerDefense PROPERTIES
+        SUFFIX ".html"
+        LINK_FLAGS "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html -s USE_GLFW=3 --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets"
+    )
+endif()
+
 # Asset directory (for runtime reference)
 set_target_properties(FiboTowerDefense PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
