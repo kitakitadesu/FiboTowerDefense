@@ -56,6 +56,21 @@ else()
     target_compile_options(FiboTowerDefense PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+# ============================================================
+# Web (Emscripten) target
+# ============================================================
+if(EMSCRIPTEN)
+    # --preload-file @assets maps absolute src → relative assets/ in virtual FS
+    # so code can open "assets/map_day_0.png" at runtime.
+    set(WEB_ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    set_target_properties(FiboTowerDefense PROPERTIES
+        SUFFIX ".html"
+        # ALLOW_MEMORY_GROWTH for large map texture (1672×942 ~6MB RGBA)
+        # ASYNCIFY needed for emscripten_sleep (raylib web backend uses it)
+        LINK_FLAGS "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html -s USE_GLFW=3 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=67108864 -s MAXIMUM_MEMORY=268435456 -s ASYNCIFY --preload-file ${WEB_ASSETS}@assets"
+    )
+endif()
+
 # Asset directory (for runtime reference)
 set_target_properties(FiboTowerDefense PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
