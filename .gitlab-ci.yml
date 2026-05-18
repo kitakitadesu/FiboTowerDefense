@@ -45,6 +45,9 @@ test:build_validation:
 pages:
   stage: deploy
   image: emscripten/emsdk:4.0.23
+  before_script:
+    # emsdk images ship cmake 3.22 (Ubuntu 22.04 base); raylib needs ≥3.25
+    - pip3 install cmake --upgrade -q
   script:
     - emcmake cmake -DPLATFORM=Web -B build-web -S .
     - cmake --build build-web -- -j$(nproc)
