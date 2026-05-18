@@ -65,8 +65,9 @@ if(EMSCRIPTEN)
     set(WEB_ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     set_target_properties(FiboTowerDefense PROPERTIES
         SUFFIX ".html"
-        # ALLOW_MEMORY_GROWTH needed for 1672×942 map texture (~6MB RGBA)
-        LINK_FLAGS "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html -s USE_GLFW=3 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=67108864 -s MAXIMUM_MEMORY=268435456 --preload-file ${WEB_ASSETS}@assets"
+        # ALLOW_MEMORY_GROWTH for large map texture (1672×942 ~6MB RGBA)
+        # ASYNCIFY needed for emscripten_sleep (raylib web backend uses it)
+        LINK_FLAGS "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html -s USE_GLFW=3 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=67108864 -s MAXIMUM_MEMORY=268435456 -s ASYNCIFY --preload-file ${WEB_ASSETS}@assets"
     )
 endif()
 
