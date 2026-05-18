@@ -24,6 +24,8 @@ build:linux:
   cache:
     paths:
       - build/_deps/
+  except:
+    - feat/web-target
 
 # Build validation test
 test:build_validation:
