@@ -32,6 +32,8 @@ FetchContent_MakeAvailable(raylib_cpp)
 # Main executable
 add_executable(FiboTowerDefense
     src/main.cpp
+    src/board.cpp
+    src/sprite.cpp
 )
 
 # Link libraries
