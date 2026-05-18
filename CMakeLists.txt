@@ -60,9 +60,12 @@ endif()
 # Web (Emscripten) target
 # ============================================================
 if(EMSCRIPTEN)
+    # --preload-file @assets maps absolute src → relative assets/ in virtual FS
+    # so code can open "assets/map_day_0.png" at runtime.
+    set(WEB_ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     set_target_properties(FiboTowerDefense PROPERTIES
         SUFFIX ".html"
-        LINK_FLAGS "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html -s USE_GLFW=3 --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        LINK_FLAGS "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html -s USE_GLFW=3 --preload-file ${WEB_ASSETS}@assets"
     )
 endif()
 
