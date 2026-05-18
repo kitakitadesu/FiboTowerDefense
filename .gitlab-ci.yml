@@ -61,5 +61,4 @@ pages:
   artifacts:
     paths:
       - public
-  only:
-    - feat/web-target
+  # no only/except → runs on all branches
