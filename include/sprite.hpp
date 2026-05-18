@@ -15,8 +15,8 @@ public:
     void loadTexture();
 
     // -- dims --
-    int width()  const { return m_frameW; }
-    int height() const { return m_frameH; }
+    int getWidth()  const { return frameW_; }
+    int getHeight() const { return frameH_; }
 
     // -- draw (screen coords) --
     void draw(int x, int y) const;
@@ -26,17 +26,17 @@ public:
 
     // -- animation (spritesheet prep) --
     void setFrameCount(int count);
-    int  frameCount() const { return m_frameCount; }
+    int  getFrameCount() const { return frameCount_; }
     void setFrame(int frame);
-    int  frame() const { return m_frame; }
+    int  getFrame() const { return frame_; }
 
 private:
-    raylib::Image   m_image;
-    raylib::Texture m_texture;
-    bool m_loaded = false;
+    raylib::Image   image_;
+    raylib::Texture texture_;
+    bool loaded_ = false;
 
-    int m_frameW      = 0;
-    int m_frameH      = 0;
-    int m_frameCount  = 1;
-    int m_frame       = 0;
+    int frameW_      = 0;
+    int frameH_      = 0;
+    int frameCount_  = 1;
+    int frame_       = 0;
 };

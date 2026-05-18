@@ -1,41 +1,41 @@
 #include "sprite.hpp"
 
 Sprite::Sprite(const std::string& path) {
-    m_image.Load(path);
-    m_frameW = m_image.GetWidth();
-    m_frameH = m_image.GetHeight();
+    image_.Load(path);
+    frameW_ = image_.GetWidth();
+    frameH_ = image_.GetHeight();
 }
 
 void Sprite::loadTexture() {
-    m_texture.Load(m_image);
-    m_image.Unload();
-    m_texture.SetFilter(TEXTURE_FILTER_POINT);
-    m_loaded = true;
+    texture_.Load(image_);
+    image_.Unload();
+    texture_.SetFilter(TEXTURE_FILTER_POINT);
+    loaded_ = true;
 }
 
 void Sprite::draw(int x, int y) const {
-    if (!m_loaded) return;
+    if (!loaded_) return;
     const Rectangle src{
-        static_cast<float>(m_frame * m_frameW), 0.0f,
-        static_cast<float>(m_frameW),
-        static_cast<float>(m_frameH)
+        static_cast<float>(frame_ * frameW_), 0.0f,
+        static_cast<float>(frameW_),
+        static_cast<float>(frameH_)
     };
     const Rectangle dst{
         static_cast<float>(x), static_cast<float>(y),
-        static_cast<float>(m_frameW),
-        static_cast<float>(m_frameH)
+        static_cast<float>(frameW_),
+        static_cast<float>(frameH_)
     };
-    m_texture.Draw(src, dst, {}, 0.0f, raylib::Color::White());
+    texture_.Draw(src, dst, {}, 0.0f, raylib::Color::White());
 }
 
 void Sprite::drawCentered(int cx, int cy) const {
-    draw(cx - m_frameW / 2, cy - m_frameH / 2);
+    draw(cx - frameW_ / 2, cy - frameH_ / 2);
 }
 
 void Sprite::drawFitted(int bx, int by, int bw, int bh) const {
-    if (!m_loaded) return;
+    if (!loaded_) return;
     const float spriteAspect =
-        static_cast<float>(m_frameW) / static_cast<float>(m_frameH);
+        static_cast<float>(frameW_) / static_cast<float>(frameH_);
     const float boxAspect =
         static_cast<float>(bw) / static_cast<float>(bh);
 
@@ -54,19 +54,19 @@ void Sprite::drawFitted(int bx, int by, int bw, int bh) const {
     const float oy = static_cast<float>(by) + (static_cast<float>(bh) - sh) / 2.0f;
 
     const Rectangle src{
-        static_cast<float>(m_frame * m_frameW), 0.0f,
-        static_cast<float>(m_frameW),
-        static_cast<float>(m_frameH)
+        static_cast<float>(frame_ * frameW_), 0.0f,
+        static_cast<float>(frameW_),
+        static_cast<float>(frameH_)
     };
     const Rectangle dst{ox, oy, sw, sh};
-    m_texture.Draw(src, dst, {}, 0.0f, raylib::Color::White());
+    texture_.Draw(src, dst, {}, 0.0f, raylib::Color::White());
 }
 
 void Sprite::setFrameCount(int count) {
-    m_frameCount = count > 0 ? count : 1;
-    m_frame = 0;
+    frameCount_ = count > 0 ? count : 1;
+    frame_ = 0;
 }
 
 void Sprite::setFrame(int frame) {
-    m_frame = (frame >= 0 && frame < m_frameCount) ? frame : 0;
+    frame_ = (frame >= 0 && frame < frameCount_) ? frame : 0;
 }

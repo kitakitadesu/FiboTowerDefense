@@ -8,42 +8,41 @@ namespace {
 
 Board::Board(const std::string& bgPath) {
     raylib::Image img(bgPath);
-    m_imageW = static_cast<float>(img.GetWidth());
-    m_imageH = static_cast<float>(img.GetHeight());
+    imageW_ = static_cast<float>(img.GetWidth());
+    imageH_ = static_cast<float>(img.GetHeight());
 
-    // Init cell grid (reference Board pattern)
-    m_data = std::vector<std::vector<char>>(
-        m_numRows, std::vector<char>(m_numCols, kDefaultCell));
+    // Init cell grid
+    data_ = std::vector<std::vector<char>>(
+        numRows_, std::vector<char>(numCols_, kDefaultCell));
 
     // Boost bg vibrancy (CPU-side, safe before Window)
     img.ColorContrast(1.3f);
     img.ColorBrightness(8);
 
     // Keep processed image for later GPU upload
-    m_processedImage = img;
-    // Don't unload img — ownership transferred to m_processedImage
+    processedImage_ = img;
 }
 
 void Board::loadTexture() {
-    m_background.Load(m_processedImage);  // GPU upload (needs GL context)
-    m_processedImage.Unload();            // CPU copy no longer needed
-    m_background.SetFilter(TEXTURE_FILTER_POINT);
+    background_.Load(processedImage_);  // GPU upload (needs GL context)
+    processedImage_.Unload();           // CPU copy no longer needed
+    background_.SetFilter(TEXTURE_FILTER_POINT);
 }
 
 void Board::updateScale(int screenWidth) {
-    m_scale = static_cast<float>(screenWidth) / m_imageW;
+    scale_ = static_cast<float>(screenWidth) / imageW_;
 }
 
 raylib::Vector2 Board::screenToImage(Vector2 screen) const {
-    return {screen.x / m_scale, screen.y / m_scale};
+    return {screen.x / scale_, screen.y / scale_};
 }
 
 CellRect Board::cellRect(int col, int row) const {
     return {
-        static_cast<int>(std::round((kOriginX + static_cast<float>(col) * kCellW) * m_scale)),
-        static_cast<int>(std::round((kOriginY + static_cast<float>(row) * kCellH) * m_scale)),
-        static_cast<int>(std::round(kCellW * m_scale)),
-        static_cast<int>(std::round(kCellH * m_scale))
+        static_cast<int>(std::round((kOriginX + static_cast<float>(col) * kCellW) * scale_)),
+        static_cast<int>(std::round((kOriginY + static_cast<float>(row) * kCellH) * scale_)),
+        static_cast<int>(std::round(kCellW * scale_)),
+        static_cast<int>(std::round(kCellH * scale_))
     };
 }
 
@@ -59,25 +58,25 @@ int Board::hoveredCell(Vector2 mouse) const {
 }
 
 bool Board::isValid(int row, int col) const {
-    return row >= 0 && row < m_numRows && col >= 0 && col < m_numCols;
+    return row >= 0 && row < numRows_ && col >= 0 && col < numCols_;
 }
 
 char Board::getCell(int row, int col) const {
-    return isValid(row, col) ? m_data[row][col] : kDefaultCell;
+    return isValid(row, col) ? data_[row][col] : kDefaultCell;
 }
 
-void Board::setCell(int row, int col, char val) {
+void Board::setCellData(int row, int col, char val) {
     if (isValid(row, col)) {
-        m_data[row][col] = val;
+        data_[row][col] = val;
     }
 }
 
 void Board::draw() const {
-    const Rectangle src{0.0f, 0.0f, m_imageW, m_imageH};
+    const Rectangle src{0.0f, 0.0f, imageW_, imageH_};
     const Rectangle dst{0.0f, 0.0f,
                         static_cast<float>(GetScreenWidth()),
                         static_cast<float>(GetScreenHeight())};
-    m_background.Draw(src, dst, {}, 0.0f, raylib::Color::White());
+    background_.Draw(src, dst, {}, 0.0f, raylib::Color::White());
 }
 
 void Board::drawHover(int cellIndex) const {

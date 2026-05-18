@@ -30,11 +30,11 @@ public:
     static constexpr int   kRows   = 5;
 
     // -- getters --
-    int cols() const { return kCols; }
-    int rows() const { return kRows; }
-    float imageWidth()  const { return m_imageW; }
-    float imageHeight() const { return m_imageH; }
-    float aspectRatio() const { return m_imageW / m_imageH; }
+    int   getColCount() const { return kCols; }
+    int   getRowCount() const { return kRows; }
+    float getImageWidth()  const { return imageW_; }
+    float getImageHeight() const { return imageH_; }
+    float getAspectRatio() const { return imageW_ / imageH_; }
 
     // -- scale (call when window resized) --
     void updateScale(int screenWidth);
@@ -51,20 +51,20 @@ public:
     void draw() const;
     void drawHover(int cellIndex) const;
 
-    // -- cell data (from reference Board) --
+    // -- cell data --
     char getCell(int row, int col) const;
-    void setCell(int row, int col, char val);
+    void setCellData(int row, int col, char val);
 
 protected:
     bool isValid(int row, int col) const;
-    int   m_numRows = kRows;
-    int   m_numCols = kCols;
-    std::vector<std::vector<char>> m_data;
+    int   numRows_ = kRows;
+    int   numCols_ = kCols;
+    std::vector<std::vector<char>> data_;
 
 private:
-    raylib::Image   m_processedImage;
-    raylib::Texture m_background;
-    float m_imageW;
-    float m_imageH;
-    float m_scale = 1.0f;
+    raylib::Image   processedImage_;
+    raylib::Texture background_;
+    float imageW_;
+    float imageH_;
+    float scale_ = 1.0f;
 };
