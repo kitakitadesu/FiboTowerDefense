@@ -1,18 +1,77 @@
-#include "raylib-cpp.hpp"
+#include "board.hpp"
+#include "sprite.hpp"
+
+#include <cmath>
+#include <utility>
+#include <vector>
 
 int main() {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    Board board("assets/map_day_0.png");
 
-    raylib::Window window(screenWidth, screenHeight, "FiboTowerDefense");
+    const int kInitW = static_cast<int>(720.0f * board.aspectRatio());
+    const int kInitH = 720;
+
+    raylib::Window window(kInitW, kInitH, "FiboTowerDefense", FLAG_WINDOW_RESIZABLE);
+    window.SetMinSize(320, static_cast<int>(320.0f / board.aspectRatio()));
     window.SetTargetFPS(60);
 
+    board.loadTexture();
+    board.updateScale(GetScreenWidth());
+
+    // Goose sprite shared by all placed geese
+    Sprite goose("assets/goose_day_0.png");
+    goose.loadTexture();
+
+    // Placed tower positions (col, row)
+    std::vector<std::pair<int, int>> towers;
+
     while (!window.ShouldClose()) {
+        // -- aspect-ratio lock --
+        if (IsWindowResized()) {
+            const int curW = GetScreenWidth();
+            const int curH = GetScreenHeight();
+            const float curAspect =
+                static_cast<float>(curW) / static_cast<float>(curH);
+            if (std::abs(curAspect - board.aspectRatio()) > 0.001f) {
+                const int clampedH =
+                    static_cast<int>(std::round(static_cast<float>(curW) / board.aspectRatio()));
+                SetWindowSize(curW, clampedH);
+            }
+            board.updateScale(GetScreenWidth());
+        }
+
+        // -- input --
+        const int hovered = board.hoveredCell(GetMousePosition());
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered >= 0) {
+            const int col = hovered % board.cols();
+            const int row = hovered / board.cols();
+
+            // Check not already occupied
+            bool occupied = false;
+            for (const auto& t : towers) {
+                if (t.first == col && t.second == row) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (!occupied) {
+                towers.emplace_back(col, row);
+            }
+        }
+
+        // -- draw --
         BeginDrawing();
         window.ClearBackground(raylib::Color::RayWhite());
 
-        raylib::DrawText("FiboTowerDefense - raylib-cpp", 190, 200, 20, raylib::Color::LightGray());
-        raylib::DrawText("Press ESC to exit", 250, 250, 15, raylib::Color::Gray());
+        board.draw();
+        board.drawHover(hovered);
+
+        // Draw all placed geese (fitted to cell, keep aspect)
+        for (const auto& [col, row] : towers) {
+            const auto [x, y, w, h] = board.cellRect(col, row);
+            goose.drawFitted(x, y, w, h);
+        }
 
         EndDrawing();
     }
