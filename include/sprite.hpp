@@ -24,6 +24,9 @@ public:
     /// Scale to fit inside bw×bh while preserving aspect ratio, centered.
     void drawFitted(int bx, int by, int bw, int bh) const;
 
+    // -- raw texture access (for shared use) --
+    const raylib::Texture& getTexture() const { return texture_; }
+
     // -- animation (spritesheet prep) --
     void setFrameCount(int count);
     int  getFrameCount() const { return frameCount_; }

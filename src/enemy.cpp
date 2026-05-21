@@ -1,0 +1,112 @@
+#include "enemy.hpp"
+
+#include <algorithm>
+#include <cmath>
+
+#include "board.hpp"
+
+// ------------------------------------------------------------------
+// Static helper: build lane waypoints from a Board row
+// ------------------------------------------------------------------
+std::vector<raylib::Vector2> buildLaneWaypoints(const Board& board, int row) {
+    std::vector<raylib::Vector2> wps;
+
+    const float margin = 80.0f;
+    const int   cols   = board.getColCount();
+
+    // Entry at right side
+    const auto cell0 = board.cellRect(cols - 1, row);
+    const float rowCenterY = cell0.y + cell0.h / 2.0f;
+
+    wps.emplace_back(static_cast<float>(cell0.x + cell0.w + margin), rowCenterY);
+
+    // Cell centers leftward
+    for (int c = cols - 1; c >= 0; --c) {
+        const auto r = board.cellRect(c, row);
+        wps.emplace_back(static_cast<float>(r.x + r.w / 2),
+                         static_cast<float>(r.y + r.h / 2));
+    }
+
+    // Exit beyond left edge
+    {
+        const auto r = board.cellRect(0, row);
+        wps.emplace_back(static_cast<float>(r.x - margin), rowCenterY);
+    }
+
+    return wps;
+}
+
+// ------------------------------------------------------------------
+// Enemy implementation
+// ------------------------------------------------------------------
+Enemy::Enemy(int row, int hp, float speed, int reward)
+    : row_(row), hp_(static_cast<float>(hp)), maxHp_(static_cast<float>(hp)),
+      speed_(speed), reward_(reward)
+{}
+
+void Enemy::update(float dt, const std::vector<raylib::Vector2>& waypoints) {
+    if (state_ != WALKING) return;
+
+    if (waypointIdx_ >= static_cast<int>(waypoints.size())) {
+        state_ = ESCAPED;
+        return;
+    }
+
+    const raylib::Vector2 target = waypoints[waypointIdx_];
+    const raylib::Vector2 diff   = target - pos_;
+
+    const float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+    if (dist < 2.0f) {
+        ++waypointIdx_;
+        vel_ = raylib::Vector2{};
+        return;
+    }
+
+    const float maxStep = speed_ * dt;
+    if (dist <= maxStep) {
+        pos_ = target;
+        ++waypointIdx_;
+        vel_ = raylib::Vector2{};
+    } else {
+        vel_ = diff / dist * maxStep;
+        pos_ = pos_ + vel_;
+    }
+}
+
+void Enemy::draw(const raylib::Texture* tex) const {
+    if (state_ != WALKING) return;
+
+    const float s = 64.0f; // draw size
+    const float h = s / 2;
+
+    if (tex) {
+        const Rectangle src{0, 0, static_cast<float>(tex->width), static_cast<float>(tex->height)};
+        const Rectangle dst{pos_.x - h, pos_.y - h, s, s};
+        tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
+    } else {
+        // Fallback: orange circle
+        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y),
+                   static_cast<int>(h), ORANGE);
+    }
+
+    // HP bar above
+    const float barW = 40.0f;
+    const float barH = 4.0f;
+    const float barX = pos_.x - barW / 2;
+    const float barY = pos_.y - h - 10;
+    const float ratio = std::max(0.0f, hp_ / maxHp_);
+    DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
+                  static_cast<int>(barW), static_cast<int>(barH), DARKGRAY);
+    DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
+                  static_cast<int>(barW * ratio), static_cast<int>(barH), RED);
+}
+
+void Enemy::takeDamage(int dmg) {
+    if (state_ != WALKING) return;
+    hp_ -= static_cast<float>(dmg);
+    if (hp_ <= 0.0f) {
+        hp_ = 0.0f;
+        state_ = DEAD;
+    }
+}

@@ -33,7 +33,11 @@ FetchContent_MakeAvailable(raylib_cpp)
 add_executable(FiboTowerDefense
     src/main.cpp
     src/board.cpp
+    src/enemy.cpp
+    src/projectile.cpp
     src/sprite.cpp
+    src/tower.cpp
+    src/wave_manager.cpp
 )
 
 # Link libraries
