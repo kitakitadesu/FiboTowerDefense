@@ -21,7 +21,8 @@ cmake --build build     # compile
 
 ## Constraints
 
-- **Desktop only** — macOS, Linux, Windows. No web/Emscripten.
+- **Desktop primary** — macOS, Linux, Windows are first-class.
+- **Web/WASM allowed** — Emscripten web builds permitted for CI/pages/testing.
 - **C++17 required** — raylib-cpp needs C++17 minimum
 - **No manual dep install** — FetchContent pulls raylib + raylib-cpp automatically. Need only cmake + compiler.
 

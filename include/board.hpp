@@ -40,12 +40,12 @@ public:
     void updateScale(int screenWidth);
 
     // -- coordinate transforms --
-    raylib::Vector2 screenToImage(Vector2 screen) const;
+    raylib::Vector2 screenToImage(raylib::Vector2 screen) const;
     CellRect cellRect(int col, int row) const;
 
     // -- input --
     /// Returns flat index (col + row * kCols) or -1 if outside grid.
-    int hoveredCell(Vector2 mouse) const;
+    int hoveredCell(raylib::Vector2 mouse) const;
 
     // -- draw --
     void draw() const;

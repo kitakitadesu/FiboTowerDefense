@@ -36,5 +36,8 @@ bool Projectile::update(float dt) {
 
 void Projectile::draw() const {
     if (impacted_) return;
-    DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 5, YELLOW);
+    // Glow effect
+    DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 8, {255, 255, 0, 100});
+    // Core
+    DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 4, {255, 255, 200, 255});
 }

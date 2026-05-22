@@ -17,7 +17,7 @@ void WaveManager::start() {
     waiting_     = false;
 }
 
-Enemy* WaveManager::update(float dt) {
+std::unique_ptr<Enemy> WaveManager::update(float dt) {
     if (!started_ || currentWave_ >= static_cast<int>(waves_.size()))
         return nullptr;
 
@@ -29,10 +29,9 @@ Enemy* WaveManager::update(float dt) {
     if (timer_ <= 0.0f && spawned_ < wave.enemyCount) {
         // Spawn
         const int row = pickRow();
-        auto* enemy = new Enemy(row, wave.hp, wave.speed, wave.reward);
         ++spawned_;
         timer_ = wave.spawnInterval;
-        return enemy;
+        return std::make_unique<Enemy>(row, wave.hp, wave.speed, wave.reward);
     }
 
     // If all spawned, caller tells us when wave is done

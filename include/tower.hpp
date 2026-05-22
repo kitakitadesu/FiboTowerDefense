@@ -1,33 +1,47 @@
 #pragma once
 
-#include <vector>
+#include <string>
 
 #include "raylib-cpp.hpp"
 
-class Enemy;
-class Projectile;
+#include "id_generator.hpp"
+#include "identifier.hpp"
+#include "idisplay_name.hpp"
+#include "isprite.hpp"
 
-/// A placed tower that auto-attacks enemies in its row.
-class Tower {
+/// Placeholder struct — expanded in future phases (boss integration).
+struct TowerData {};
+
+/// The base to defend. When destroyed → game over.
+class Tower : public IIdentifier, public IDisplayName, public ISprite {
 public:
-    Tower(int col, int row, float range, float fireRate, int damage);
+    explicit Tower(int maxHp);
 
-    /// Update cooldown. Fire at nearest enemy in row within range. Returns new projectile or null.
-    Projectile* update(float dt, raylib::Vector2 screenPos, const std::vector<Enemy*>& enemies);
+    int getId() const override { return id_; }
+    std::string getDisplayName() const override { return "Main Base"; }
 
-    void draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const;
+    // ISprite
+    void draw() const override;
 
-    bool isDead() const { return dead_; }
+    // HP
+    int  getHp()    const { return hp_; }
+    int  getMaxHp() const { return maxHp_; }
+    void setHp(int hp) { hp_ = std::max(0, hp); }
 
-    int getCol() const { return col_; }
-    int getRow() const { return row_; }
-    int getDamage() const { return damage_; }
+    // Shield
+    bool hasShield() const { return shield_; }
+    void setShield(bool s) { shield_ = s; }
+
+    /// Shield absorbs fully while active; otherwise reduces HP.
+    void takeDamage(int amount);
+    bool isDestroyed() const { return hp_ <= 0; }
+
+    const TowerData& getTowerData() const { return data_; }
 
 private:
-    int   col_, row_;
-    float range_;
-    float fireRate_;   ///< shots per second
-    float cooldown_ = 0.0f;
-    int   damage_;
-    bool  dead_ = false;
+    int       id_;
+    int       hp_;
+    int       maxHp_;
+    bool      shield_ = false;
+    TowerData data_;
 };
