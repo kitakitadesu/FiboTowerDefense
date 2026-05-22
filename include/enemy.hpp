@@ -27,6 +27,11 @@ public:
 
     void takeDamage(int dmg);
 
+    void spawnAt(const raylib::Vector2& pos) {
+        pos_ = pos;
+        waypointIdx_ = 1;
+    }
+
     // -- getters --
     int     getRow()    const { return row_; }
     float   getHp()     const { return hp_; }

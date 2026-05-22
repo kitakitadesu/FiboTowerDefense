@@ -25,13 +25,18 @@ public:
     void start();
 
     /// Returns newly spawned enemy or nullptr.
-    Enemy* update(float dt);
+    std::unique_ptr<Enemy> update(float dt);
 
     bool isWaveActive()  const;  ///< wave spawned all but enemies still alive
     bool allWavesDone()  const;  ///< all waves completed
 
     int  getCurrentWave() const { return currentWave_; }
     int  getWaveCount()   const { return static_cast<int>(waves_.size()); }
+    int  getSpawnedCount() const { return spawned_; }
+    int  getCurrentWaveEnemyCount() const {
+        return (currentWave_ < static_cast<int>(waves_.size()))
+            ? waves_[currentWave_].enemyCount : 0;
+    }
 
     /// Call when current wave enemies are all dead/escaped to advance.
     void advanceWave();

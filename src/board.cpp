@@ -33,7 +33,7 @@ void Board::updateScale(int screenWidth) {
     scale_ = static_cast<float>(screenWidth) / imageW_;
 }
 
-raylib::Vector2 Board::screenToImage(Vector2 screen) const {
+raylib::Vector2 Board::screenToImage(raylib::Vector2 screen) const {
     return {screen.x / scale_, screen.y / scale_};
 }
 
@@ -46,7 +46,7 @@ CellRect Board::cellRect(int col, int row) const {
     };
 }
 
-int Board::hoveredCell(Vector2 mouse) const {
+int Board::hoveredCell(raylib::Vector2 mouse) const {
     const raylib::Vector2 img = screenToImage(mouse);
     if (img.x < kOriginX || img.y < kOriginY) return -1;
 

@@ -29,15 +29,27 @@ FetchContent_Declare(raylib_cpp
 )
 FetchContent_MakeAvailable(raylib_cpp)
 
+# Fetch entt (header-only ECS/event library)
+FetchContent_Declare(entt
+    GIT_REPOSITORY https://github.com/skypjack/entt.git
+    GIT_TAG v3.13.0
+)
+FetchContent_MakeAvailable(entt)
+
 # Main executable
 add_executable(FiboTowerDefense
     src/main.cpp
     src/board.cpp
     src/enemy.cpp
     src/projectile.cpp
+    src/raygui_impl.cpp
+    src/solar_cell.cpp
     src/sprite.cpp
     src/tower.cpp
+    src/turret.cpp
     src/wave_manager.cpp
+    src/game.cpp
+    src/level.cpp
 )
 
 # Link libraries
@@ -51,6 +63,7 @@ target_include_directories(FiboTowerDefense
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${raylib_cpp_SOURCE_DIR}/include
+    ${entt_SOURCE_DIR}/src
 )
 
 # Compiler flags
