@@ -21,23 +21,20 @@ void Tower::draw() const {
     const int by = scrH / 2 - bh / 2;
 
     // Body
-    DrawRectangleRounded({static_cast<float>(bx), static_cast<float>(by),
-                          static_cast<float>(bw), static_cast<float>(bh)},
-                         0.15f, 8, {60, 60, 80, 255});
+    DrawRectangle(bx, by, bw, bh, {35, 35, 50, 255});
     // Roof
     DrawTriangle({static_cast<float>(bx - 8), static_cast<float>(by)},
                  {static_cast<float>(bx + bw / 2), static_cast<float>(by - 30)},
                  {static_cast<float>(bx + bw + 8), static_cast<float>(by)},
-                 {100, 100, 140, 255});
+                 {55, 55, 75, 255});
     // Door
-    DrawRectangleRounded({static_cast<float>(bx + bw / 2 - 12), static_cast<float>(by + bh - 35),
-                          24.0f, 30.0f}, 0.3f, 6, {140, 110, 60, 255});
+    DrawRectangle(bx + bw / 2 - 12, by + bh - 35, 24, 30, {180, 120, 40, 255});
 
     // Shield overlay
     if (shield_) {
-        DrawRectangleRoundedLines({static_cast<float>(bx - 4), static_cast<float>(by - 4),
-                                   static_cast<float>(bw + 8), static_cast<float>(bh + 8)},
-                                  0.15f, 8, {100, 200, 255, 200});
+        DrawRectangleLinesEx({static_cast<float>(bx - 4), static_cast<float>(by - 4),
+                              static_cast<float>(bw + 8), static_cast<float>(bh + 8)},
+                             2.0f, {255, 140, 20, 200});
     }
 
     // HP bar above
@@ -47,9 +44,11 @@ void Tower::draw() const {
     const float barY = static_cast<float>(by - 16);
     const float ratio = static_cast<float>(hp_) / static_cast<float>(maxHp_);
 
-    DrawRectangleRounded({barX - 1, barY - 1, barW + 2, barH + 2}, 0.5f, 4, {20, 20, 20, 200});
+    DrawRectangle(static_cast<int>(barX - 1), static_cast<int>(barY - 1),
+                  static_cast<int>(barW + 2), static_cast<int>(barH + 2), {30, 30, 40, 200});
     raylib::Color hpColor = (ratio > 0.5f) ? GREEN : ((ratio > 0.25f) ? ORANGE : RED);
-    DrawRectangleRounded({barX, barY, barW * ratio, barH}, 0.5f, 4, hpColor);
+    DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
+                  static_cast<int>(barW * ratio), static_cast<int>(barH), hpColor);
 
     // HP text
     const std::string hpStr = std::to_string(hp_) + "/" + std::to_string(maxHp_);
