@@ -99,7 +99,7 @@ void Enemy::draw(const raylib::Texture* tex) const {
     
     // Border/Background
     DrawRectangle(static_cast<int>(barX - 1), static_cast<int>(barY - 1),
-                  static_cast<int>(barW + 2), static_cast<int>(barH + 2), {20, 20, 20, 200});
+                  static_cast<int>(barW + 2), static_cast<int>(barH + 2), {30, 30, 40, 200});
     // HP fill
     raylib::Color hpColor = (ratio > 0.5f) ? GREEN : ((ratio > 0.25f) ? ORANGE : RED);
     DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),

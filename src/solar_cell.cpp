@@ -37,6 +37,6 @@ void SolarCell::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) cons
     const float badgeX = screenPos.x - lw / 2.0f;
     const float badgeY = screenPos.y - h - 8;
     DrawRectangle(static_cast<int>(badgeX - 4), static_cast<int>(badgeY - 2),
-                  lw + 8, 16, {0, 0, 0, 180});
+                  lw + 8, 16, {30, 30, 40, 200});
     DrawText(lvlStr.c_str(), static_cast<int>(badgeX), static_cast<int>(badgeY), lf, WHITE);
 }

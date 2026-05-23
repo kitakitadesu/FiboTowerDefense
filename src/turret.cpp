@@ -104,7 +104,7 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
         const float badgeX = screenPos.x - lw / 2.0f;
         const float badgeY = screenPos.y - h - 16;
         DrawRectangle(static_cast<int>(badgeX - 4), static_cast<int>(badgeY - 2),
-                      lw + 8, 16, {0, 0, 0, 180});
+                      lw + 8, 16, {30, 30, 40, 200});
         DrawText(lvlStr.c_str(), static_cast<int>(badgeX), static_cast<int>(badgeY), lf, WHITE);
     }
 
@@ -116,7 +116,7 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
     const float ratio = hp_ / maxHp_;
 
     DrawRectangle(static_cast<int>(barX - 1), static_cast<int>(barY - 1),
-                  static_cast<int>(barW + 2), static_cast<int>(barH + 2), {40, 40, 40, 200});
+                  static_cast<int>(barW + 2), static_cast<int>(barH + 2), {30, 30, 40, 200});
     raylib::Color hpColor = (ratio > 0.5f) ? GREEN : ((ratio > 0.25f) ? ORANGE : RED);
     DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
                   static_cast<int>(barW * ratio), static_cast<int>(barH), hpColor);

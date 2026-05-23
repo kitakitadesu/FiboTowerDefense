@@ -168,7 +168,7 @@ void Game::render() {
 
     // ── Cheat indicator (hidden on menu) ──
     if (cheatMode_ && state_ != GameState::Menu) {
-        raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, GREEN);
+        raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, Color{255, 140, 20, 255});
     }
 
     // ── Menu ──
@@ -228,7 +228,7 @@ void Game::render() {
         const int btnY = 15;
         const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "II";
 
-        DrawRectangle(btnX, btnY, btnS, btnS, {0, 0, 0, 180});
+        DrawRectangle(btnX, btnY, btnS, btnS, {15, 15, 25, 200});
         raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
 
         if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
@@ -242,7 +242,7 @@ void Game::render() {
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
         DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangle(cx - 150, cy - 90, 300, 180, {20, 20, 20, 230});
+        DrawRectangle(cx - 150, cy - 90, 300, 180, {15, 15, 25, 240});
 
         const char* pauseMsg = "PAUSED";
         raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2 + 3, cy - 70, 50, BLACK);
@@ -262,7 +262,7 @@ void Game::renderEndScreen() {
     ClearBackground({20, 20, 20, 255});
 
     const int cx = GetScreenWidth() / 2, cy = GetScreenHeight() / 2;
-    DrawRectangle(cx - 210, cy - 150, 420, 370, {40, 40, 40, 255});
+    DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
 
     const bool isGameOver = (state_ == GameState::Lost);
     const char* msg = isGameOver ? "GAME OVER" : "VICTORY!";

@@ -268,32 +268,34 @@ void Level::renderUI() {
         const int kBarX       = (scrW - kBarW) / 2;
         const int kBarY       = scrH - kBarH - 10;
 
-        DrawRectangle(kBarX, kBarY, kBarW, kBarH, {0, 0, 0, 200});
+        DrawRectangle(kBarX, kBarY, kBarW, kBarH, {15, 15, 25, 210});
 
-        // Button helper with active highlight
+        // Button helper with active highlight + hover
         auto buildBtn = [&](int idx, const char* label, BuildMode mode, bool affordable) {
             const int bx = kBarX + kPad + idx * (kBtnW + kPad);
             const int by = kBarY + kPad;
             const bool active = (placingMode_ == mode);
             if (!affordable && !active) GuiSetState(STATE_DISABLED);
 
+            int ob = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
+            int of = GuiGetStyle(BUTTON, BASE_COLOR_FOCUSED);
+            int ot = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
+
             if (active) {
-                int ob = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
-                int ot = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
-                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, (int)ColorToInt(Color{60, 140, 255, 255}));
+                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, (int)ColorToInt(Color{255, 140, 20, 255}));
                 GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, (int)ColorToInt(WHITE));
-                if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
-                               static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
-                    placingMode_ = BuildMode::None;
-                }
-                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ob);
-                GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ot);
-            } else {
-                if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
-                               static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
-                    placingMode_ = mode;
-                }
             }
+            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, (int)ColorToInt(Color{60, 60, 80, 255}));
+
+            if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
+                           static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
+                if (active) placingMode_ = BuildMode::None;
+                else placingMode_ = mode;
+            }
+
+            GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ob);
+            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, of);
+            GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ot);
 
             GuiSetState(STATE_NORMAL);
         };
@@ -399,7 +401,7 @@ clickHandled:
         auto& selT = turrets_[selectedTurretIdx_];
         const auto sr = grid_.cellRect(selT.getCol(), selT.getRow());
         DrawRectangleLinesEx({static_cast<float>(sr.x), static_cast<float>(sr.y),
-                              static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, GOLD);
+                              static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, Color{255, 140, 20, 255});
 
         const int cx = scrW / 2;
         int px = (sr.x < cx) ? sr.x + sr.w + 12 : sr.x - panelW - 12;
@@ -410,7 +412,7 @@ clickHandled:
         if (py + 240 > scrH - 70) py = scrH - 70 - 240;
         const int pH = s(220);
 
-        DrawRectangle(px, py, panelW, pH, {20, 20, 20, 235});
+        DrawRectangle(px, py, panelW, pH, {15, 15, 25, 240});
 
         const char* tn = (selT.getTurretType() == TurretType::Shooting) ? "Shooting Turret" : "Melee Turret";
         std::string title = std::string(tn) + "  Lv." + std::to_string(selT.getLevel());
@@ -495,7 +497,7 @@ clickHandled:
         auto& selS = solarCells_[selectedSolarIdx_];
         const auto sr = grid_.cellRect(selS.getCol(), selS.getRow());
         DrawRectangleLinesEx({static_cast<float>(sr.x), static_cast<float>(sr.y),
-                              static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, GOLD);
+                              static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, Color{255, 140, 20, 255});
 
         const int cx = scrW / 2;
         int px = (sr.x < cx) ? sr.x + sr.w + 12 : sr.x - panelW - 12;
@@ -506,7 +508,7 @@ clickHandled:
         if (py + 210 > scrH - 70) py = scrH - 70 - 210;
         const int pH = s(190);
 
-        DrawRectangle(px, py, panelW, pH, {20, 20, 20, 235});
+        DrawRectangle(px, py, panelW, pH, {15, 15, 25, 240});
 
         std::string title = "Solar Cell  Lv." + std::to_string(selS.getLevel());
         const int tFs = s(17);
@@ -611,7 +613,7 @@ clickHandled:
                 if (placingMode_ != BuildMode::None || (selectedTurretIdx_ < 0 && selectedSolarIdx_ < 0)) {
                     Color ghostTint;
                     switch (placingMode_) {
-                        case BuildMode::ShootTurret: ghostTint = {100, 150, 255, 100}; break;
+                        case BuildMode::ShootTurret: ghostTint = {255, 140, 20, 100}; break;
                         case BuildMode::MeleeTurret: ghostTint = {255, 180, 80, 100};  break;
                         case BuildMode::SolarCell:   ghostTint = {255, 255, 80, 100};  break;
                         default:                     ghostTint = {255, 255, 255, 80};  break;
@@ -640,7 +642,7 @@ clickHandled:
 
         const int pw = s(235);
         const int ph = margin * 2 + rowH * 4 + s(16);
-        DrawRectangle(margin, margin, pw, ph, {0, 0, 0, 180});
+        DrawRectangle(margin, margin, pw, ph, {15, 15, 25, 200});
 
         int y = margin + s(12);
 
@@ -661,10 +663,10 @@ clickHandled:
         const int barY = y + s(22);
         const int barW = pw - s(30);
         const int barH = s(10);
-        DrawRectangle(margin + s(15), barY, barW, barH, {60, 60, 60, 200});
+        DrawRectangle(margin + s(15), barY, barW, barH, {30, 30, 40, 200});
         if (totalEnemiesThisWave_ > 0) {
             float pct = std::min(1.0f, static_cast<float>(enemiesKilledThisWave_) / totalEnemiesThisWave_);
-            DrawRectangle(margin + 15, barY, static_cast<int>(barW * pct), barH, SKYBLUE);
+            DrawRectangle(margin + 15, barY, static_cast<int>(barW * pct), barH, Color{255, 140, 20, 200});
         }
         y = barY + barH + 10;
 
@@ -676,8 +678,8 @@ clickHandled:
         std::string scoreStr = "\xE2\x98\x85  " + std::to_string(scoreboard_.getCurrentScore());
         const int scoreW = MeasureText(scoreStr.c_str(), fs) + s(30);
         const int scoreX = scrW - scoreW - margin;
-        DrawRectangle(scoreX, margin, scoreW, fs + 30, {0, 0, 0, 180});
-        raylib::DrawText(scoreStr.c_str(), scoreX + 15, margin + 15, fs, SKYBLUE);
+        DrawRectangle(scoreX, margin, scoreW, fs + 30, {15, 15, 25, 200});
+        raylib::DrawText(scoreStr.c_str(), scoreX + 15, margin + 15, fs, Color{255, 140, 20, 255});
     }
 
     // ── Sell confirmation dialog ──
@@ -689,7 +691,7 @@ clickHandled:
 
         // Dim background
         DrawRectangle(0, 0, scrW, scrH, {0, 0, 0, 120});
-        DrawRectangle(dlgX, dlgY, dlgW, dlgH, {20, 20, 20, 240});
+        DrawRectangle(dlgX, dlgY, dlgW, dlgH, {15, 15, 25, 240});
 
         char msg[48]; snprintf(msg, sizeof(msg), "Sell for %dg?", sellConfirmGold_);
         raylib::DrawText(msg, dlgX + dlgW/2 - MeasureText(msg, 20)/2, dlgY + 20, 20, WHITE);
