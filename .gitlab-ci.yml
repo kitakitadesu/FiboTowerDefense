@@ -6,24 +6,24 @@ stages:
 variables:
   CMAKE_BUILD_TYPE: Release
 
-# Linux build (Docker)
-build:linux:
+# Windows cross-compile (MinGW-w64 on Linux Docker)
+build:windows:
   stage: build
   image: ubuntu:24.04
   before_script:
     - apt-get update -qq
-    - apt-get install -y -qq cmake make g++ git libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxfixes-dev libgl-dev
+    - apt-get install -y -qq cmake make git mingw-w64
   script:
-    - mkdir -p build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ..
+    - mkdir -p build-windows
+    - cd build-windows
+    - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain-mingw.cmake ..
     - make -j$(nproc)
   artifacts:
     paths:
-      - build/FiboTowerDefense
+      - build-windows/FiboTowerDefense.exe
   cache:
     paths:
-      - build/_deps/
+      - build-windows/_deps/
   except:
     - feat/web-target
 
@@ -32,13 +32,13 @@ test:build_validation:
   stage: test
   image: ubuntu:24.04
   dependencies:
-    - build:linux
+    - build:windows
   before_script:
     - apt-get update -qq
     - apt-get install -y -qq file
   script:
-    - file build/FiboTowerDefense
-    - test -x build/FiboTowerDefense || (echo "Executable not found or not executable" && exit 1)
+    - file build-windows/FiboTowerDefense.exe
+    - file build-windows/FiboTowerDefense.exe | grep -qi "PE32\|executable" || (echo "Not a Windows executable" && exit 1)
   only:
     - merge_requests
     - main
