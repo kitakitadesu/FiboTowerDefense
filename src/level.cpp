@@ -509,7 +509,7 @@ void Level::renderUI() {
                         addTurret(Turret(col, row, TurretType::UR3e, 0, 1.5f, 25));
                         placements_.place(row, col, PlacementGrid::kTurret);
                     } else if (placingMode_ == BuildMode::MeleeTurret) {
-                        addTurret(Turret(col, row, TurretType::Goose, 120, 1.2f, 35));
+                        addTurret(Turret(col, row, TurretType::Goose, 120, 1.2f, 20));
                         placements_.place(row, col, PlacementGrid::kTurret);
                     } else if (placingMode_ == BuildMode::SolarCell) {
                         addSolarCell(SolarCell(col, row));
