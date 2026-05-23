@@ -9,7 +9,7 @@
 
 Game::Game()
     : id_(IdGenerator::getNextId()),
-      board_("assets/map_day_0.png"),
+      board_(),
       tower_(25),
       cheatSeq_{KEY_B, KEY_O, KEY_C, KEY_C, KEY_H, KEY_I},
       gooseTex_("assets/goose_day_0.png")

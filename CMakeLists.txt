@@ -41,6 +41,7 @@ add_executable(FiboTowerDefense
     src/main.cpp
     src/board.cpp
     src/enemy.cpp
+    src/layer.cpp
     src/projectile.cpp
     src/raygui_impl.cpp
     src/solar_cell.cpp

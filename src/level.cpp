@@ -224,35 +224,52 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     }
 }
 
+static void drawRow(int r, const raylib::Texture* g, const std::vector<Turret>& tur,
+                    const std::vector<SolarCell>& sol, const std::vector<std::unique_ptr<Enemy>>& ene,
+                    const Board& b)
+{
+    for (auto& t : tur) if (t.getRow() == r) {
+        auto cr = b.cellRect(t.getCol(), t.getRow());
+        t.draw(g, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
+    }
+    for (auto& s : sol) if (s.getRow() == r) {
+        auto cr = b.cellRect(s.getCol(), s.getRow());
+        s.draw(g, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
+    }
+    for (auto& e : ene) if (e->getRow() == r) e->draw(g);
+}
+
 void Level::render(const raylib::Texture* gooseRaw) {
-    grid_.draw();
+    // z=0: bg
+    grid_.drawRange(0, 0);
 
-    // Tower base
-    tower_.draw();
+    // Row 0 — behind building_1
+    drawRow(0, gooseRaw, turrets_, solarCells_, enemies_, grid_);
 
-    // Turrets
-    for (const auto& tur : turrets_) {
-        const auto r = grid_.cellRect(tur.getCol(), tur.getRow());
-        const raylib::Vector2 pos(
-            static_cast<float>(r.x + r.w / 2),
-            static_cast<float>(r.y + r.h / 2));
-        tur.draw(gooseRaw, pos);
-    }
+    // z=1: building_1
+    grid_.drawRange(1, 1);
 
-    // Solar cells
-    for (const auto& sc : solarCells_) {
-        const auto r = grid_.cellRect(sc.getCol(), sc.getRow());
-        sc.draw(gooseRaw, {static_cast<float>(r.x + r.w / 2), static_cast<float>(r.y + r.h / 2)});
-    }
+    // Rows 1,2 — hit building_1, behind sign
+    drawRow(1, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+    drawRow(2, gooseRaw, turrets_, solarCells_, enemies_, grid_);
 
-    // Enemies
-    for (const auto& e : enemies_)
-        e->draw(gooseRaw);
+    // z=2: stone_front
+    grid_.drawRange(2, 2);
+
+    // Row 3 — ABOVE stone
+    drawRow(3, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+
+    // z=3: sign, z=4: building_4
+    grid_.drawRange(3, 4);
+
+    // Row 4 — behind building_5
+    drawRow(4, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+
+    // z=5: building_5
+    grid_.drawRange(5, 5);
 
     // Projectiles
-    for (const auto& p : projectiles_)
-        p->draw();
-
+    for (auto& p : projectiles_) p->draw();
 }
 
 void Level::renderUI() {
