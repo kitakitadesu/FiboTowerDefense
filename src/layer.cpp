@@ -193,28 +193,39 @@ void LayerManager::upload() {
 }
 
 void LayerManager::setNightMode(bool night) {
-    const std::string base = night ? "assets/night" : "assets";
     for (auto& layer : layers_) {
-        // Build night path: replace "assets/" prefix with "assets/night/"
-        std::string nightPath = layer.path;
-        size_t pos = nightPath.find("assets/");
-        if (pos != std::string::npos)
-            nightPath.replace(pos, 7, "assets/night/");
-        else
-            nightPath = base + "/" + layer.path.substr(layer.path.rfind('/') + 1);
+        std::string srcDir, dstDir;
+        if (night) {
+            srcDir = "assets/";
+            dstDir = "assets/night/";
+        } else {
+            srcDir = "assets/night/";
+            dstDir = "assets/";
+        }
 
-        // Check file exists
+        // Check if already on target dir
+        if (layer.path.find(dstDir) != std::string::npos)
+            continue;
+
+        // Replace srcDir with dstDir
+        std::string newPath = layer.path;
+        size_t pos = newPath.find(srcDir);
+        if (pos != std::string::npos) {
+            newPath.replace(pos, srcDir.size(), dstDir);
+        } else {
+            continue;
+        }
+
         struct stat st;
-        if (stat(nightPath.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
-            continue; // fallback: keep current texture
+        if (stat(newPath.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
+            continue;
 
-        // Reload texture
         layer.texture.Unload();
-        raylib::Image img(nightPath);
+        raylib::Image img(newPath);
         layer.texture.Load(img);
         layer.texture.SetFilter(TEXTURE_FILTER_POINT);
         img.Unload();
-        layer.path = nightPath;
+        layer.path = newPath;
     }
 }
 
