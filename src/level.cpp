@@ -58,6 +58,17 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
         }
     }
 
+    // ── cheat: E to skip wave ──
+    if (cheatMode_ && IsKeyPressed(KEY_E)) {
+        for (auto& e : enemies_) {
+            if (e->getState() == Enemy::WALKING)
+                e->takeDamage(99999);
+        }
+        waveMgr_.advanceWave();
+        enemiesKilledThisWave_ = 0;
+        totalEnemiesThisWave_ = waveMgr_.getCurrentWaveEnemyCount();
+    }
+
     // ── turrets fire ──
     {
         std::vector<Enemy*> enemyPtrs;
