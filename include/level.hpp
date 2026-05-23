@@ -82,6 +82,7 @@ public:
     void setSelectedTurretIdx(int i) { selectedTurretIdx_ = i; }
     void setSelectedSolarIdx(int i)  { selectedSolarIdx_ = i; }
     void setCheatMode(bool c)       { cheatMode_ = c; }
+    void setPaused(bool p)          { paused_ = p; }
 
     std::vector<FloatingText>& getFloatingTexts() { return floatingTexts_; }
 
@@ -131,6 +132,7 @@ private:
     int turretsPlaced_     = 0;
     int solarPlaced_       = 0;
     bool cheatMode_ = false;
+    bool paused_ = false;
     BuildMode placingMode_ = BuildMode::None;
 
     Sound sfxSelect_;

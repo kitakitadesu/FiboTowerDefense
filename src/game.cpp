@@ -57,6 +57,7 @@ void Game::init() {
     board_.loadTexture();
     gooseTex_.loadTexture();
 
+    menuImage_.loadTexture();
     menuMusic_ = LoadMusicStream("assets/dayMusic_Signal_at_the_Tower.mp3");
     dayMusic_ = LoadMusicStream("assets/menuMusic_Clocktower_Circuit.mp3");
     // nightMusic_ = LoadMusicStream("assets/bgm_night.mp3");
@@ -161,23 +162,24 @@ void Game::render() {
 
     if (currentLevel_) {
         currentLevel_->render(gooseRaw);
+        currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }
 
-    // ── Cheat indicator ──
-    if (cheatMode_) {
-        raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, GREEN);
+    // ── Cheat indicator (hidden on menu) ──
+    if (cheatMode_ && state_ != GameState::Menu) {
+        raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, Color{255, 140, 20, 255});
     }
 
-   // ── Menu ──
+    // ── Menu ──
     if (state_ == GameState::Menu) {
-        static Texture2D menuImage = LoadTexture("assets/GameMenu_edit2.png");
+        const auto& menuTex = menuImage_.getTexture();
 
         const float screenW = static_cast<float>(GetScreenWidth());
         const float screenH = static_cast<float>(GetScreenHeight());
-        const Rectangle sourceRec = {0.0f, 0.0f, static_cast<float>(menuImage.width), static_cast<float>(menuImage.height)};
+        const Rectangle sourceRec = {0.0f, 0.0f, static_cast<float>(menuTex.width), static_cast<float>(menuTex.height)};
         const Rectangle destRec = {0.0f, 0.0f, screenW, screenH};
-        DrawTexturePro(menuImage, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
+        DrawTexturePro(menuTex, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
 
         // Start button (image-based hot zone)
         const Rectangle startBtnBounds = {screenW / 2 - 130, screenH / 2 + 28, 253, 88};
@@ -197,8 +199,10 @@ void Game::render() {
             DrawRectangleRec(startBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
         }
         // Quit button visual feedback
-        if (hoverQuit && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-            DrawRectangleRec(quitBtnBounds, {0, 0, 0, 80});
+        if (hoverQuit) {
+            const bool pressing = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+            DrawRectangleRec(quitBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
+        }
 
         // Triggers on release
         if ((hoverStart && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) ||
@@ -222,11 +226,9 @@ void Game::render() {
         const int btnS = 36;
         const int btnX = GetScreenWidth() - btnS - 15;
         const int btnY = 15;
-        const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "\xE2\x96\xB6\xE2\x96\xB6";
+        const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "II";
 
-        DrawRectangleRounded({static_cast<float>(btnX), static_cast<float>(btnY),
-                              static_cast<float>(btnS), static_cast<float>(btnS)},
-                             0.2f, 8, {0, 0, 0, 180});
+        DrawRectangle(btnX, btnY, btnS, btnS, {15, 15, 25, 200});
         raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
 
         if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
@@ -240,8 +242,7 @@ void Game::render() {
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
         DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangleRounded({static_cast<float>(cx - 150), static_cast<float>(cy - 90),
-                              300.0f, 180.0f}, 0.2f, 10, {20, 20, 20, 230});
+        DrawRectangle(cx - 150, cy - 90, 300, 180, {15, 15, 25, 240});
 
         const char* pauseMsg = "PAUSED";
         raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2 + 3, cy - 70, 50, BLACK);
@@ -261,8 +262,16 @@ void Game::renderEndScreen() {
     ClearBackground({20, 20, 20, 255});
 
     const int cx = GetScreenWidth() / 2, cy = GetScreenHeight() / 2;
-    DrawRectangleRounded({static_cast<float>(cx - 210), static_cast<float>(cy - 150),
-                          420.0f, 300.0f}, 0.2f, 10, {40, 40, 40, 255});
+    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL,   (int)ColorToInt(Color{50, 50, 60, 255}));
+    GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL,   (int)ColorToInt(Color{200, 200, 210, 255}));
+    GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, (int)ColorToInt(Color{80, 80, 90, 255}));
+    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED,  (int)ColorToInt(Color{70, 65, 55, 255}));
+    GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED,  (int)ColorToInt(Color{255, 255, 255, 255}));
+    GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED,(int)ColorToInt(Color{255, 140, 20, 255}));
+    GuiSetStyle(BUTTON, BASE_COLOR_PRESSED,  (int)ColorToInt(Color{80, 70, 55, 255}));
+    GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED,  (int)ColorToInt(Color{255, 255, 220, 255}));
+    GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED,(int)ColorToInt(Color{255, 160, 40, 255}));
+    DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
 
     const bool isGameOver = (state_ == GameState::Lost);
     const char* msg = isGameOver ? "GAME OVER" : "VICTORY!";
@@ -272,18 +281,33 @@ void Game::renderEndScreen() {
     std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
     raylib::DrawText(scoreStr.c_str(), cx - MeasureText(scoreStr.c_str(), 26) / 2, cy - 45, 26, GOLD);
 
-    if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 30), 180.0f, 45.0f}, "PLAY AGAIN")
+    // ── High scores ──
+    {
+        const auto top = scoreboard_.getTopScores(3);
+        if (!top.empty()) {
+            int hsY = cy + 5;
+            raylib::DrawText("HIGH SCORES", cx - MeasureText("HIGH SCORES", 16) / 2, hsY, 16, GRAY);
+            hsY += 20;
+            for (int i = 0; i < static_cast<int>(top.size()); ++i) {
+                std::string line = std::to_string(i + 1) + ". " + top[i].name + " - " + std::to_string(top[i].score);
+                raylib::DrawText(line.c_str(), cx - MeasureText(line.c_str(), 14) / 2, hsY, 14, LIGHTGRAY);
+                hsY += 18;
+            }
+        }
+    }
+
+    if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 85), 180.0f, 45.0f}, "PLAY AGAIN")
         || IsKeyPressed(KEY_R)) {
         shouldRestart_ = true;
     }
 
-    if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 85), 180.0f, 45.0f}, "QUIT")
+    if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 140), 180.0f, 45.0f}, "QUIT")
         || IsKeyPressed(KEY_ESCAPE)) {
         running_ = false;
     }
 
     raylib::DrawText("R = Play Again  |  ESC = Quit",
-        cx - MeasureText("R = Play Again  |  ESC = Quit", 12) / 2, cy + 145, 12, {100, 100, 100, 180});
+        cx - MeasureText("R = Play Again  |  ESC = Quit", 12) / 2, cy + 200, 12, {100, 100, 100, 180});
 
     EndDrawing();
 }

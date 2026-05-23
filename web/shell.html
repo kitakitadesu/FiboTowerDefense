@@ -67,6 +67,14 @@
         <canvas class=emscripten id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas>
         <p id="output" />
         <script>
+            var audioCtx = null;
+            function resumeAudio() {
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            }
+            document.addEventListener('click', resumeAudio);
+            document.addEventListener('touchstart', resumeAudio);
+            document.addEventListener('keydown', resumeAudio);
+
             var Module = {
                 print: (function() {
                     var element = document.getElementById('output');
@@ -83,7 +91,10 @@
                 canvas: (function() {
                     var canvas = document.getElementById('canvas');
                     return canvas;
-                })()
+                })(),
+                preRun: [function() {
+                    try { audioCtx = new AudioContext(); } catch(e) {}
+                }]
             };
         </script>
         {{{ SCRIPT }}}
