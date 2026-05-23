@@ -12,6 +12,15 @@ Level::Level(Board& grid, Tower& tower, Scoreboard& scoreboard)
       waveMgr_(grid)
 {
     listenToEvents();
+
+    sfxSelect_ = LoadSound("assets/select_006.ogg");
+    sfxPlace_  = LoadSound("assets/drop_001.ogg");
+    sfxError_  = LoadSound("assets/error_008.ogg");
+}
+Level::~Level() {
+    UnloadSound(sfxSelect_);
+    UnloadSound(sfxPlace_);
+    UnloadSound(sfxError_);
 }
 
 void Level::listenToEvents() {
@@ -298,6 +307,9 @@ void Level::renderUI() {
 
             if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
                            static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
+                
+                PlaySound(sfxSelect_);
+                
                 if (active) placingMode_ = BuildMode::None;
                 else placingMode_ = mode;
             }
@@ -368,9 +380,13 @@ void Level::renderUI() {
                     }
                 }
             }
+            if ((foundTurret >= 0 || foundSolar >= 0) && placingMode_ != BuildMode::None) {
+                PlaySound(sfxError_); 
+            }
 
             if (foundTurret >= 0 || foundSolar >= 0) {
                 // Clicked existing entity → always select regardless of build mode
+                PlaySound(sfxSelect_);
                 selectedTurretIdx_ = foundTurret;
                 selectedSolarIdx_  = foundSolar;
             } else if (placingMode_ != BuildMode::None) {
@@ -383,6 +399,8 @@ void Level::renderUI() {
                 else if (placingMode_ == BuildMode::SolarCell) cost = 60;
                 if (currency_ >= cost) {
                     currency_ -= cost;
+                    PlaySound(sfxPlace_);
+
                     if (placingMode_ == BuildMode::ShootTurret)
                         addTurret(Turret(col, row, TurretType::Shooting, 0, 1.5f, 25));
                     else if (placingMode_ == BuildMode::MeleeTurret)
@@ -390,6 +408,8 @@ void Level::renderUI() {
                     else if (placingMode_ == BuildMode::SolarCell)
                         addSolarCell(SolarCell(col, row));
                 } else {
+                    PlaySound(sfxError_);
+
                     raylib::Vector2 mp = GetMousePosition();
                     floatingTexts_.push_back({{mp.x, mp.y - 20},
                         "Not enough gold!", RED, 1.2f, 1.2f, {0.0f, -30.0f}});
