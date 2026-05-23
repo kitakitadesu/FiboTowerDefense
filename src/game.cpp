@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <string>
 
 #include <raygui.h>
@@ -65,8 +64,6 @@ void Game::init() {
 
     clickSound_ = LoadSound("assets/toggle_002.ogg");
 
-    scoreboard_.load("scores.dat");
-
     switchMusic(&menuMusic_);
 }
 
@@ -104,10 +101,7 @@ void Game::resetForRestart() {
     cheatMode_ = false;
     cheatIdx_ = 0;
     bossDefeated_ = false;
-    scoreboard_ = Scoreboard();
-    nameInput_[0] = '\0';
-    scoreSaved_ = false;
-    nameEditing_ = false;
+    scoreboard_ = Scoreboard();  // reset scores
     // Tower will be reset in start()
     // Textures stay loaded (they have the GL context)
     start();
@@ -151,9 +145,11 @@ void Game::update(float dt) {
 
         if (currentLevel_->isTowerDestroyed()) {
             state_ = GameState::Lost;
+            scoreboard_.addScore("Player", scoreboard_.getCurrentScore());
         } else if (currentLevel_->getWaveManager().allWavesDone() &&
                    currentLevel_->getEnemies().empty()) {
             state_ = GameState::Won;
+            scoreboard_.addScore("Player", scoreboard_.getCurrentScore());
         }
     }
 }
@@ -275,76 +271,43 @@ void Game::renderEndScreen() {
     GuiSetStyle(BUTTON, BASE_COLOR_PRESSED,  (int)ColorToInt(Color{80, 70, 55, 255}));
     GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED,  (int)ColorToInt(Color{255, 255, 220, 255}));
     GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED,(int)ColorToInt(Color{255, 160, 40, 255}));
+    DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
 
     const bool isGameOver = (state_ == GameState::Lost);
     const char* msg = isGameOver ? "GAME OVER" : "VICTORY!";
+    raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2 + 3, cy - 115, 50, BLACK);
+    raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2, cy - 118, 50, isGameOver ? RED : GREEN);
 
-    if (!scoreSaved_) {
-        // ── Taller panel with name input ──
-        DrawRectangle(cx - 210, cy - 175, 420, 410, {25, 25, 35, 255});
+    std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
+    raylib::DrawText(scoreStr.c_str(), cx - MeasureText(scoreStr.c_str(), 26) / 2, cy - 45, 26, GOLD);
 
-        // Title
-        raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2 + 3, cy - 135, 50, BLACK);
-        raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2, cy - 138, 50, isGameOver ? RED : GREEN);
-
-        // Score
-        std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
-        raylib::DrawText(scoreStr.c_str(), cx - MeasureText(scoreStr.c_str(), 26) / 2, cy - 60, 26, GOLD);
-
-        // ── Name input ──
-        raylib::DrawText("YOUR NAME:", cx - 160, cy - 15, 16, LIGHTGRAY);
-        Rectangle nameRect = {static_cast<float>(cx - 160), static_cast<float>(cy + 12), 220, 30};
-        if (GuiTextBox(nameRect, nameInput_, 31, nameEditing_) == 1)
-            nameEditing_ = !nameEditing_;
-
-        Rectangle saveRect = {static_cast<float>(cx + 70), static_cast<float>(cy + 12), 90, 30};
-        if (GuiButton(saveRect, "SAVE")) {
-            if (nameEditing_) nameEditing_ = false;
-            if (nameInput_[0] == '\0') strcpy(nameInput_, "Player");
-            scoreboard_.addScore(nameInput_, scoreboard_.getCurrentScore());
-            scoreboard_.save("scores.dat");
-            scoreSaved_ = true;
-        }
-    } else {
-        // ── Normal panel with high scores + actions ──
-        DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
-
-        // Title
-        raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2 + 3, cy - 115, 50, BLACK);
-        raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2, cy - 118, 50, isGameOver ? RED : GREEN);
-
-        // Score
-        std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
-        raylib::DrawText(scoreStr.c_str(), cx - MeasureText(scoreStr.c_str(), 26) / 2, cy - 45, 26, GOLD);
-
-        // ── High scores ──
-        {
-            const auto top = scoreboard_.getTopScores(10);
+    // ── High scores ──
+    {
+        const auto top = scoreboard_.getTopScores(3);
+        if (!top.empty()) {
             int hsY = cy + 5;
             raylib::DrawText("HIGH SCORES", cx - MeasureText("HIGH SCORES", 16) / 2, hsY, 16, GRAY);
-            hsY += 22;
+            hsY += 20;
             for (int i = 0; i < static_cast<int>(top.size()); ++i) {
                 std::string line = std::to_string(i + 1) + ". " + top[i].name + " - " + std::to_string(top[i].score);
-                bool isCurrent = (i == 0 && top[i].name == nameInput_ && top[i].score == scoreboard_.getCurrentScore());
-                raylib::DrawText(line.c_str(), cx - MeasureText(line.c_str(), 14) / 2, hsY,
-                                 14, isCurrent ? Color{255, 140, 20, 255} : LIGHTGRAY);
+                raylib::DrawText(line.c_str(), cx - MeasureText(line.c_str(), 14) / 2, hsY, 14, LIGHTGRAY);
                 hsY += 18;
             }
         }
-
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 85), 180.0f, 45.0f}, "PLAY AGAIN")
-            || IsKeyPressed(KEY_R)) {
-            shouldRestart_ = true;
-        }
-
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 140), 180.0f, 45.0f}, "QUIT")
-            || IsKeyPressed(KEY_ESCAPE)) {
-            running_ = false;
-        }
-
-        raylib::DrawText("R = Play Again  |  ESC = Quit",
-            cx - MeasureText("R = Play Again  |  ESC = Quit", 12) / 2, cy + 200, 12, {100, 100, 100, 180});
     }
+
+    if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 85), 180.0f, 45.0f}, "PLAY AGAIN")
+        || IsKeyPressed(KEY_R)) {
+        shouldRestart_ = true;
+    }
+
+    if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 140), 180.0f, 45.0f}, "QUIT")
+        || IsKeyPressed(KEY_ESCAPE)) {
+        running_ = false;
+    }
+
+    raylib::DrawText("R = Play Again  |  ESC = Quit",
+        cx - MeasureText("R = Play Again  |  ESC = Quit", 12) / 2, cy + 200, 12, {100, 100, 100, 180});
 
     EndDrawing();
 }

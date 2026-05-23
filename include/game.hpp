@@ -73,15 +73,10 @@ private:
     Music menuMusic_;
     Music dayMusic_;
     // Music nightMusic_;
-    Music* currentMusic_ = nullptr;
+    Music* currentMusic_ = nullptr; // ตัวชี้ว่าตอนนี้เล่นเพลงไหนอยู่
 
     // sfx
     Sound clickSound_;
-
-    // Name input on end screen
-    char  nameInput_[32] = "";
-    bool  scoreSaved_ = false;
-    bool  nameEditing_ = false;
 
     void switchMusic(Music* newMusic);
 };
