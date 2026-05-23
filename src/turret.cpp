@@ -85,11 +85,15 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float c
                                    static_cast<float>(tex->height)};
         const Rectangle dst{screenPos.x - h, screenPos.y - h, s, s};
 
-        // Goose glows blue at night
-        raylib::Color tint = (isNight && type_ == TurretType::Goose)
-            ? raylib::Color{120, 180, 255, 255}
-            : raylib::Color::White();
-        tex->Draw(src, dst, {}, 0.0f, tint);
+        tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
+
+        // Goose blue glow overlay at night
+        if (isNight && type_ == TurretType::Goose) {
+            DrawCircle(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y),
+                       s * 0.7f, {80, 150, 255, 60});
+            DrawCircle(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y),
+                       s * 0.45f, {120, 200, 255, 40});
+        }
     } else {
         const raylib::Color c = (type_ == TurretType::UR3e) ? BLUE : ORANGE;
         DrawRectangle(static_cast<int>(screenPos.x - h),
