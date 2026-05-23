@@ -99,7 +99,6 @@ public:
 
     // --- events ---
     entt::dispatcher& events() { return events_; }
-    void onEnemyKilled(const EnemyKilledEvent& event);
     void listenToEvents();
 
     // --- stubs for Phase 3+ ---

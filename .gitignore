@@ -1,6 +1,7 @@
 # Build artifacts
 build/
 build-web/
+build-wasm/
 *.o
 *.a
 *.so
@@ -21,3 +22,23 @@ build-web/
 
 # CMake
 CMakeUserPresets.json
+
+# Ctx graph memory
+.ctx/
+
+# Screenshots / artifacts in project root
+*.png
+*.patch
+
+# Patch scripts
+fix_*.py
+patch*.py
+
+# WASM deployment
+public/
+
+# Logs
+*.log
+
+# Runtime data
+scores.dat

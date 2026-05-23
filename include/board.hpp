@@ -41,7 +41,7 @@ public:
 
     // -- coordinate transforms --
     raylib::Vector2 screenToImage(raylib::Vector2 screen) const;
-    CellRect cellRect(int col, int row) const;
+    CellRect cellRect(int col, int row) const { return cellRects_[row][col]; }
 
     // -- input --
     /// Returns flat index (col + row * kCols) or -1 if outside grid.
@@ -51,15 +51,7 @@ public:
     void draw() const;
     void drawHover(int cellIndex) const;
 
-    // -- cell data --
-    char getCell(int row, int col) const;
-    void setCellData(int row, int col, char val);
-
 protected:
-    bool isValid(int row, int col) const;
-    int   numRows_ = kRows;
-    int   numCols_ = kCols;
-    std::vector<std::vector<char>> data_;
 
 private:
     raylib::Image   processedImage_;
@@ -67,4 +59,8 @@ private:
     float imageW_;
     float imageH_;
     float scale_ = 1.0f;
+
+    // Precomputed cell rects (rebuilt on scale change)
+    CellRect cellRects_[kRows][kCols]{};
+    void recacheRects();
 };

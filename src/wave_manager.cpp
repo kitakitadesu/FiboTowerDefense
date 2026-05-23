@@ -2,7 +2,7 @@
 #include "board.hpp"
 
 #include <algorithm>
-#include <cstdlib>  // std::rand
+#include <random>
 
 WaveManager::WaveManager(const Board& board) : board_(board) {}
 
@@ -59,7 +59,9 @@ int WaveManager::getCurrentWaveEnemyCount() const {
 }
 
 int WaveManager::pickRow() const {
-    return std::rand() % board_.getRowCount();
+    static std::mt19937 rng(std::random_device{}());
+    static std::uniform_int_distribution<int> dist(0, board_.getRowCount() - 1);
+    return dist(rng);
 }
 
 // Called externally to advance to next wave or finish

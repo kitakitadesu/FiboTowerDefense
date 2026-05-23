@@ -7,6 +7,10 @@
 
 #include <raygui.h>
 
+namespace {
+    constexpr int kTowerMaxHp = 25;
+}
+
 Game::Game()
     : id_(IdGenerator::getNextId()),
       board_("assets/map_day_0.png"),
@@ -78,7 +82,7 @@ void Game::start() {
     rebuildWaypoints();
 
     // ── fresh Tower (reset HP) ──
-    tower_ = Tower(25);
+    tower_ = Tower(kTowerMaxHp);
 
     // ── create Level with 5 default waves ──
     auto level = std::make_unique<Level>(board_, tower_, scoreboard_);
@@ -225,9 +229,6 @@ void Game::render() {
         if (hoverQuit && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         {
             PlaySound(clickSound_);
-            while (IsSoundPlaying(clickSound_)) {
-                WaitTime(0.01f); 
-            }
             running_ = false;
         }
     }

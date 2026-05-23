@@ -52,8 +52,10 @@ public:
                 auto sep = line.find(':');
                 if (sep != std::string::npos) {
                     std::string name = line.substr(0, sep);
-                    int s = std::stoi(line.substr(sep + 1));
-                    entries_.push_back({name, s});
+                    try {
+                        int s = std::stoi(line.substr(sep + 1));
+                        entries_.push_back({name, s});
+                    } catch (...) { /* skip malformed line */ }
                 }
             }
             std::sort(entries_.begin(), entries_.end(),

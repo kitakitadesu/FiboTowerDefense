@@ -1,11 +1,20 @@
 #include "level.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <string>
 
 #include <raygui.h>
+
+namespace {
+    constexpr float  kEnemyDPS        = 10.0f;
+    constexpr int    kCostShootTurret = 100;
+    constexpr int    kCostMeleeTurret = 80;
+    constexpr int    kCostSolarCell   = 60;
+    constexpr int    kGridRows        = 5;
+}
 
 Level::Level(Board& grid, Tower& tower, Scoreboard& scoreboard)
     : id_(IdGenerator::getNextId()), grid_(grid), tower_(tower), scoreboard_(scoreboard),
@@ -24,11 +33,7 @@ Level::~Level() {
 }
 
 void Level::listenToEvents() {
-    events_.sink<EnemyKilledEvent>().connect<&Level::onEnemyKilled>(this);
-}
-
-void Level::onEnemyKilled(const EnemyKilledEvent& event) {
-    (void)event;
+    // Reserved for Phase 3+ boss/powerup event wiring
 }
 
 bool Level::spendCurrency(int amt) {
@@ -90,41 +95,54 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     for (auto& p : projectiles_) p->update(dt);
 
     // ── enemies — collision with turrets / solar ──
-    const float enemyDPS = 10.0f;
-    for (auto& e : enemies_) {
-        if (e->getState() != Enemy::WALKING) continue;
+    {
+        // Row-bucketed lookup: O(T + S) build + O(E * avgPerRow) collision
+        // vs O(E * T + E * S) naive nested loops
+        std::array<std::vector<Turret*>, kGridRows> turretsByRow;
+        for (auto& t : turrets_)
+            if (t.isAlive())
+                turretsByRow[t.getRow()].push_back(&t);
 
-        bool blocked = false;
-        for (auto& t : turrets_) {
-            if (!t.isAlive() || t.getRow() != e->getRow()) continue;
-            const auto cellR = grid_.cellRect(t.getCol(), t.getRow());
-            const float tx = static_cast<float>(cellR.x + cellR.w / 2);
-            const float cellHalfW = cellR.w * 0.4f;
-            const float dx = tx - e->getPosition().x;
-            if (dx > 0 && dx < cellHalfW + e->getRadius()) {
-                blocked = true;
-                t.takeDamage(enemyDPS * dt);
-                break;
-            }
-        }
+        std::array<std::vector<SolarCell*>, kGridRows> solarByRow;
+        for (auto& sc : solarCells_)
+            if (sc.isAlive())
+                solarByRow[sc.getRow()].push_back(&sc);
 
-        if (!blocked) {
-            for (auto& sc : solarCells_) {
-                if (sc.getRow() != e->getRow()) continue;
-                const auto cellR = grid_.cellRect(sc.getCol(), sc.getRow());
-                const float sx = static_cast<float>(cellR.x + cellR.w / 2);
+        for (auto& e : enemies_) {
+            if (e->getState() != Enemy::WALKING) continue;
+
+            const int row = e->getRow();
+            bool blocked = false;
+
+            for (auto* t : turretsByRow[row]) {
+                const auto cellR = grid_.cellRect(t->getCol(), t->getRow());
+                const float tx = static_cast<float>(cellR.x + cellR.w / 2);
                 const float cellHalfW = cellR.w * 0.4f;
-                const float dx = sx - e->getPosition().x;
+                const float dx = tx - e->getPosition().x;
                 if (dx > 0 && dx < cellHalfW + e->getRadius()) {
                     blocked = true;
-                    sc.takeDamage(enemyDPS * dt);
+                    t->takeDamage(kEnemyDPS * dt);
                     break;
                 }
             }
-        }
 
-        if (!blocked)
-            e->update(dt, laneWps[e->getRow()]);
+            if (!blocked) {
+                for (auto* sc : solarByRow[row]) {
+                    const auto cellR = grid_.cellRect(sc->getCol(), sc->getRow());
+                    const float sx = static_cast<float>(cellR.x + cellR.w / 2);
+                    const float cellHalfW = cellR.w * 0.4f;
+                    const float dx = sx - e->getPosition().x;
+                    if (dx > 0 && dx < cellHalfW + e->getRadius()) {
+                        blocked = true;
+                        sc->takeDamage(kEnemyDPS * dt);
+                        break;
+                    }
+                }
+            }
+
+            if (!blocked)
+                e->update(dt, laneWps[row]);
+        }
     }
 
     // ── cleanup impacted projectiles ──
@@ -337,9 +355,9 @@ void Level::renderUI() {
             GuiSetState(STATE_NORMAL);
         };
 
-        const bool affordableShoot = currency_ >= 100;
-        const bool affordableMelee = currency_ >= 80;
-        const bool affordableSolar = currency_ >= 60;
+        const bool affordableShoot = currency_ >= kCostShootTurret;
+        const bool affordableMelee = currency_ >= kCostMeleeTurret;
+        const bool affordableSolar = currency_ >= kCostSolarCell;
 
         buildBtn(0, "Tower  (T)  100g", BuildMode::ShootTurret, affordableShoot);
         buildBtn(1, "Melee  (M)  80g",  BuildMode::MeleeTurret, affordableMelee);
@@ -411,9 +429,9 @@ void Level::renderUI() {
                 selectedTurretIdx_ = -1;
                 selectedSolarIdx_  = -1;
                 int cost = 0;
-                if (placingMode_ == BuildMode::ShootTurret) cost = 100;
-                else if (placingMode_ == BuildMode::MeleeTurret) cost = 80;
-                else if (placingMode_ == BuildMode::SolarCell) cost = 60;
+                if (placingMode_ == BuildMode::ShootTurret) cost = kCostShootTurret;
+                else if (placingMode_ == BuildMode::MeleeTurret) cost = kCostMeleeTurret;
+                else if (placingMode_ == BuildMode::SolarCell) cost = kCostSolarCell;
                 if (currency_ >= cost) {
                     currency_ -= cost;
                     PlaySound(sfxPlace_);
