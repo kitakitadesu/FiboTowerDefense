@@ -74,9 +74,10 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
     return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage());
 }
 
-void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, bool isNight) const {
+void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH, bool isNight) const {
     if (hp_ <= 0.0f) return;
-    const float s = 50.0f;
+    // Fit sprite inside cell preserving aspect ratio, with 10% padding
+    const float s = std::min(cellW, cellH) * 0.85f;
     const float h = s / 2;
 
     if (tex) {

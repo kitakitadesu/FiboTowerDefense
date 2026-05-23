@@ -252,13 +252,16 @@ static void drawRow(int r, const raylib::Texture* ur3eTex, const raylib::Texture
     for (auto& t : tur) if (t.getRow() == r) {
         auto cr = b.cellRect(t.getCol(), t.getRow());
         auto tex = (t.getTurretType() == TurretType::UR3e) ? ur3eTex : gooseTex;
-        t.draw(tex, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)}, isNight);
+        t.draw(tex, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)}, float(cr.w), float(cr.h), isNight);
     }
     for (auto& s : sol) if (s.getRow() == r) {
         auto cr = b.cellRect(s.getCol(), s.getRow());
-        s.draw(solarTex, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
+        s.draw(solarTex, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)}, float(cr.w), float(cr.h));
     }
-    for (auto& e : ene) if (e->getRow() == r) e->draw(gooseTex);
+    for (auto& e : ene) if (e->getRow() == r) {
+        auto cr = b.cellRect(0, e->getRow());
+        e->draw(gooseTex, float(cr.w), float(cr.h));
+    }
 }
 
 void Level::render(const raylib::Texture* ur3eTex, const raylib::Texture* gooseTex,

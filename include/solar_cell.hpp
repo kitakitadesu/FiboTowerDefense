@@ -29,7 +29,7 @@ public:
     /// Advance timer. Returns gold earned this tick (0 or getReward()). No energy at night.
     int update(float dt, bool isNight);
 
-    void draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const;
+    void draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH) const;
 
     int getCol() const { return m_col; }
     int getRow() const { return m_row; }

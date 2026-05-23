@@ -74,10 +74,10 @@ void Enemy::update(float dt, const std::vector<raylib::Vector2>& waypoints) {
     }
 }
 
-void Enemy::draw(const raylib::Texture* tex) const {
+void Enemy::draw(const raylib::Texture* tex, float cellW, float cellH) const {
     if (state_ != WALKING) return;
 
-    const float s = 64.0f; // draw size
+    const float s = std::min(cellW, cellH) * 0.85f;
     const float h = s / 2;
 
     if (tex) {

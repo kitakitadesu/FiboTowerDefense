@@ -27,7 +27,7 @@ public:
 
     // ISprite
     void draw() const override {}
-    void draw(const raylib::Texture* tex) const;  // overload with texture
+    void draw(const raylib::Texture* tex, float cellW, float cellH) const;
 
     void update(float dt, const std::vector<raylib::Vector2>& waypoints);
     void takeDamage(int dmg);

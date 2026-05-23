@@ -36,7 +36,7 @@ public:
     /// Update cooldown. Fire at nearest enemy in row within range. Returns new projectile or null.
     std::unique_ptr<Projectile> update(float dt, raylib::Vector2 screenPos, const std::vector<Enemy*>& enemies);
 
-    void draw(const raylib::Texture* tex, raylib::Vector2 screenPos, bool isNight) const;
+    void draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH, bool isNight) const;
 
     void takeDamage(float dmg);
 

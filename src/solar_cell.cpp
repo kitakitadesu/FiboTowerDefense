@@ -15,8 +15,8 @@ int SolarCell::update(float dt, bool isNight) {
     return 0;
 }
 
-void SolarCell::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
-    const float s = 50.0f;
+void SolarCell::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH) const {
+    const float s = std::min(cellW, cellH) * 0.85f;
     const float h = s / 2.0f;
 
     if (tex) {
