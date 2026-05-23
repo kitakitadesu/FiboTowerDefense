@@ -148,23 +148,15 @@ void Game::update(float dt) {
         UpdateMusicStream(*currentMusic_);
     }
 
-    // ── aspect-ratio lock (desktop only) ──
-#ifndef __EMSCRIPTEN__
-    if (IsWindowResized()) {
-#else
+    // ── update scale on resize (track width to avoid re-entry) ──
     {
-#endif
+        static int prevW = GetScreenWidth();
         const int curW = GetScreenWidth();
-        const int curH = GetScreenHeight();
-        const float curAspect = static_cast<float>(curW) / static_cast<float>(curH);
-        if (std::abs(curAspect - board_.getAspectRatio()) > 0.001f) {
-#ifndef __EMSCRIPTEN__
-            const int clampedH = static_cast<int>(std::round(static_cast<float>(curW) / board_.getAspectRatio()));
-            SetWindowSize(curW, clampedH);
-#endif
+        if (curW != prevW) {
+            prevW = curW;
+            board_.updateScale(static_cast<float>(curW));
+            rebuildWaypoints();
         }
-        board_.updateScale(GetScreenWidth());
-        rebuildWaypoints();
     }
 
     // ── cheat input ──
