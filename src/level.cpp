@@ -304,15 +304,13 @@ void Level::render(const raylib::Texture* ur3eTex, const raylib::Texture* gooseT
     // z=0: bg
     grid_.drawRange(0, 0);
 
-    // Row 0 — behind building_1
+    // All rows behind their building layers
     drawRow(0, ur3eTex, gooseTex, solarTex, manTex, turrets_, solarCells_, enemies_, grid_, isNight);
+    drawRow(1, ur3eTex, gooseTex, solarTex, manTex, turrets_, solarCells_, enemies_, grid_, isNight);
+    drawRow(2, ur3eTex, gooseTex, solarTex, manTex, turrets_, solarCells_, enemies_, grid_, isNight);
 
     // z=1: building_1
     grid_.drawRange(1, 1);
-
-    // Rows 1,2 — hit building_1, behind sign
-    drawRow(1, ur3eTex, gooseTex, solarTex, manTex, turrets_, solarCells_, enemies_, grid_, isNight);
-    drawRow(2, ur3eTex, gooseTex, solarTex, manTex, turrets_, solarCells_, enemies_, grid_, isNight);
 
     // z=2: stone_front
     grid_.drawRange(2, 2);
