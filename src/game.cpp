@@ -210,6 +210,15 @@ void Game::update(float dt) {
             if (nightAlpha_ < targetAlpha) nightAlpha_ = targetAlpha;
         }
 
+        // Toggle board layers when alpha crosses 128 midpoint
+        if (!boardIsNight_ && nightAlpha_ >= 128.0f) {
+            board_.setNightMode(true);
+            boardIsNight_ = true;
+        } else if (boardIsNight_ && nightAlpha_ <= 128.0f && !isNight_) {
+            board_.setNightMode(false);
+            boardIsNight_ = false;
+        }
+
         if (currentLevel_->isTowerDestroyed()) {
             state_ = GameState::Lost;
         } else if (currentLevel_->getWaveManager().allWavesDone() &&

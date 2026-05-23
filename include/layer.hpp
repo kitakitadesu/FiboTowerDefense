@@ -37,8 +37,12 @@ public:
 
     LayerManager(const LayerManager&) = delete;
     LayerManager& operator=(const LayerManager&) = delete;
-
     void load(const std::string& assetDir);
+
+    /// Reload all textures from alternate dir (e.g. "assets/night").
+    /// Clears existing textures, reloads from new path, re-uploads to GPU.
+    void setNightMode(bool night);
+
     void upload();
     void setScale(float s) { scale_ = s; }
 

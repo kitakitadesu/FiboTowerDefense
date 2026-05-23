@@ -23,6 +23,9 @@ public:
 
     void loadTexture();
 
+    /// Toggle night mode: reloads layer textures from assets/night/.
+    void setNightMode(bool night) { layers_.setNightMode(night); }
+
     static constexpr float kOriginX = 395.0f;
     static constexpr float kOriginY = 262.0f;
     static constexpr float kCellW  = 98.0f;

@@ -182,9 +182,39 @@ void LayerManager::load(const std::string& assetDir) {
 void LayerManager::upload() {
     for (auto& layer : layers_) {
         raylib::Image img(layer.path);
+        if (imageW_ <= 0.0f || imageH_ <= 0.0f) {
+            imageW_ = static_cast<float>(img.GetWidth());
+            imageH_ = static_cast<float>(img.GetHeight());
+        }
         layer.texture.Load(img);
         layer.texture.SetFilter(TEXTURE_FILTER_POINT);
         img.Unload();
+    }
+}
+
+void LayerManager::setNightMode(bool night) {
+    const std::string base = night ? "assets/night" : "assets";
+    for (auto& layer : layers_) {
+        // Build night path: replace "assets/" prefix with "assets/night/"
+        std::string nightPath = layer.path;
+        size_t pos = nightPath.find("assets/");
+        if (pos != std::string::npos)
+            nightPath.replace(pos, 7, "assets/night/");
+        else
+            nightPath = base + "/" + layer.path.substr(layer.path.rfind('/') + 1);
+
+        // Check file exists
+        struct stat st;
+        if (stat(nightPath.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
+            continue; // fallback: keep current texture
+
+        // Reload texture
+        layer.texture.Unload();
+        raylib::Image img(nightPath);
+        layer.texture.Load(img);
+        layer.texture.SetFilter(TEXTURE_FILTER_POINT);
+        img.Unload();
+        layer.path = nightPath;
     }
 }
 
