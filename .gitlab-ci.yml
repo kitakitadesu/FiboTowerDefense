@@ -65,8 +65,7 @@ pages:
     name: emscripten/emsdk:5.0.7
     pull_policy: if-not-present
   before_script:
-    # emsdk images ship cmake 3.22 (Ubuntu 22.04 base); raylib needs ≥3.25
-    - pip3 install cmake --upgrade -q
+    # emsdk 5.0.7 ships with cmake ≥3.25 — no upgrade needed
   script:
     - emcmake cmake -DPLATFORM=Web -B build-web -S .
     - cmake --build build-web -- -j$(nproc)
