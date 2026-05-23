@@ -15,6 +15,7 @@ enum class GameState {
     Menu,
     Playing,
     Paused,
+    Countdown,
     Won,
     Lost
 };
@@ -73,7 +74,7 @@ private:
     Texture2D nightMapTex_;
     bool isNight_ = false;
     float nightAlpha_ = 0.0f;
-    
+
     Music menuMusic_;
     Music dayMusic_;
     Music nightMusic_;
@@ -81,6 +82,8 @@ private:
 
     // sfx
     Sound clickSound_;
+    Sound countdownBeep_;
+    int   lastCountdownNum_ = -1;
 
     // Name input on end screen
     char  nameInput_[32] = "";
@@ -88,4 +91,6 @@ private:
     bool  nameEditing_ = false;
 
     void switchMusic(Music* newMusic);
+
+    float countdownTimer_ = 0.0f;
 };
