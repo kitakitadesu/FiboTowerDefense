@@ -57,8 +57,15 @@ void Game::rebuildWaypoints() {
         for (int r = 0; r < board_.getRowCount(); ++r)
             laneWps_[r] = buildLaneWaypoints(board_, r);
     }
-    // Convert to screen coords at current scale (runs on every resize)
+    // Convert to screen coords at current scale
     const float s = board_.getScale();
+    screenWps_.resize(laneWps_.size());
+    for (size_t r = 0; r < laneWps_.size(); ++r) {
+        screenWps_[r].resize(laneWps_[r].size());
+        for (size_t i = 0; i < laneWps_[r].size(); ++i)
+            screenWps_[r][i] = laneWps_[r][i] * s;
+    }
+}
     screenWps_.resize(laneWps_.size());
     for (size_t r = 0; r < laneWps_.size(); ++r) {
         screenWps_[r].resize(laneWps_[r].size());

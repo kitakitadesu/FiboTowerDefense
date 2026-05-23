@@ -21,7 +21,7 @@ std::vector<raylib::Vector2> buildLaneWaypoints(const GameBoard& board, int row)
     wps.emplace_back(rightEdge + margin, rowCenterY);                // spawn off right
     for (int c = cols - 1; c >= 0; --c)
         wps.emplace_back(GameBoard::kOriginX + static_cast<float>(c) * GameBoard::kCellW + GameBoard::kCellW / 2.0f, rowCenterY);  // cell centers
-    wps.emplace_back(GameBoard::kOriginX - margin, rowCenterY);     // exit off left
+    wps.emplace_back(GameBoard::kOriginX, rowCenterY);              // exit at building (left edge of grid)
 
     return wps;
 }
