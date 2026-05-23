@@ -46,7 +46,7 @@ public:
 
     // --- level-dependent stats ---
     int   getReward()   const { return 6 + (m_level - 1) * 3; }   // 6, 9, 12, 15, 18
-    float getInterval() const { return 1.8f - (m_level - 1) * 0.2f; }  // 1.8, 1.6, 1.4, 1.2, 1.0
+    float getInterval() const { return 3.0f - (m_level - 1) * 0.3f; }  // 3.0, 2.7, 2.4, 2.1, 1.8
 
     // --- HP (delegated to Health component) ---
     void  takeDamage(float dmg) { health_.takeDamage(dmg); }

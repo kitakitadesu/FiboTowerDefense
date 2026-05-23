@@ -114,10 +114,10 @@ void Game::start() {
         wm.addWave(w);
     };
     addW(5, 1.5f, 70, 50.0f, 32);
-    addW(8, 1.2f, 85, 55.0f, 37);
-    addW(12, 1.0f, 100, 60.0f, 42);
-    addW(15, 0.9f, 130, 65.0f, 47);
-    addW(20, 0.8f, 170, 70.0f, 52);
+    addW(8, 1.2f, 85, 50.0f, 37);
+    addW(12, 1.0f, 100, 50.0f, 42);
+    addW(15, 0.9f, 130, 55.0f, 47);
+    addW(20, 0.8f, 170, 55.0f, 52);
     level->start();
     level->setTowerHitSound(&towerHitSound_);
     currentLevel_ = std::move(level);
