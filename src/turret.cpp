@@ -87,15 +87,10 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float c
 
         tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
 
-        // Goose blue glow overlay at night (pulsing, 40% max opacity)
+        // Goose blue glow overlay at night (smooth radial gradient)
         if (isNight && type_ == TurretType::Goose) {
-            const float pulse = 0.6f + 0.4f * std::sin(GetTime() * 3.0f);
-            const unsigned char a1 = static_cast<unsigned char>(102 * pulse);
-            const unsigned char a2 = static_cast<unsigned char>(68 * pulse);
-            DrawCircle(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y),
-                       s * 0.7f, {80, 150, 255, a1});
-            DrawCircle(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y),
-                       s * 0.45f, {120, 200, 255, a2});
+            DrawCircleGradient(screenPos, s * 0.75f,
+                               {120, 200, 255, 102}, {120, 200, 255, 0});
         }
     } else {
         const raylib::Color c = (type_ == TurretType::UR3e) ? BLUE : ORANGE;
