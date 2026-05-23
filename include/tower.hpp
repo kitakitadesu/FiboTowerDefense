@@ -9,9 +9,6 @@
 #include "idisplay_name.hpp"
 #include "isprite.hpp"
 
-/// Placeholder struct — expanded in future phases (boss integration).
-struct TowerData {};
-
 /// The base to defend. When destroyed → game over.
 class Tower : public IIdentifier, public IDisplayName, public ISprite {
 public:
@@ -36,12 +33,9 @@ public:
     void takeDamage(int amount);
     bool isDestroyed() const { return hp_ <= 0; }
 
-    const TowerData& getTowerData() const { return data_; }
-
 private:
     int       id_;
     int       hp_;
     int       maxHp_;
     bool      shield_ = false;
-    TowerData data_;
 };

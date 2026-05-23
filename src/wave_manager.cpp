@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <random>
 
-WaveManager::WaveManager(const Board& board) : board_(board) {}
+WaveManager::WaveManager(const Board& board)
+    : id_(IdGenerator::getNextId()), board_(board) {}
 
 void WaveManager::addWave(const WaveDef& def) {
     waves_.push_back(def);
@@ -69,10 +70,6 @@ void WaveManager::advanceWave() {
     ++currentWave_;
     spawned_ = 0;
     timer_   = 3.0f; // 3 second delay before next wave
-}
-
-void WaveManager::markWaiting(bool w) {
-    waiting_ = w;
 }
 
 // ── Infinite wave scaling (ramps from wave 5 / index 4 onward) ──

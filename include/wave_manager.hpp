@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "enemy.hpp"
+#include "id_generator.hpp"
+#include "identifier.hpp"
 
 class Board;
 
@@ -17,29 +19,28 @@ struct WaveDef {
 };
 
 /// Manages wave progression and enemy spawning along lane rows.
-class WaveManager {
+class WaveManager : public IIdentifier {
 public:
     explicit WaveManager(const Board& board);
+
+    int  getId() const override { return id_; }
 
     void addWave(const WaveDef& def);
     void start();
 
-    /// Returns newly spawned enemy or nullptr.
     std::unique_ptr<Enemy> update(float dt);
 
-    bool isWaveActive()  const;  ///< wave spawned all but enemies still alive
-    bool allWavesDone()  const;  ///< all waves completed
+    bool isWaveActive()  const;
+    bool allWavesDone()  const;
 
     int  getCurrentWave() const { return currentWave_; }
     int  getWaveCount()   const { return static_cast<int>(waves_.size()); }
-    int  getSpawnedCount() const { return spawned_; }
     int  getCurrentWaveEnemyCount() const;
 
-    /// Call when current wave enemies are all dead/escaped to advance.
     void advanceWave();
-    void markWaiting(bool w);
 
 private:
+    int id_;
     const Board& board_;
     std::vector<WaveDef> waves_;
     int  currentWave_ = 0;
@@ -50,7 +51,6 @@ private:
 
     int  pickRow() const;
 
-    // Infinite wave scaling (ramps past last predefined wave)
     int     infEnemyCount() const;
     int     infHp()    const;
     float   infSpeed() const;
