@@ -75,8 +75,8 @@ public:
     void start();
     void update(float dt, const std::vector<std::vector<raylib::Vector2>>& laneWps, bool isNight);
     void render(const raylib::Texture* ur3eTex, const raylib::Texture* gooseTex,
-                const raylib::Texture* solarTex, const Texture2D* nightMap = nullptr,
-                float nightAlpha = 0.0f);
+                const raylib::Texture* solarTex, const raylib::Texture* manTex,
+                const Texture2D* nightMap = nullptr, float nightAlpha = 0.0f);
     void renderUI();
 
     // --- events ---

@@ -42,3 +42,7 @@ public/
 
 # Runtime data
 scores.dat
+.playwright-cli/
+paths.json
+docs/
+context/

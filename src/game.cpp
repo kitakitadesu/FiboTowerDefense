@@ -74,6 +74,8 @@ void Game::init() {
     gooseNight_.loadTexture();
     solarDay_.loadTexture();
     solarNight_.loadTexture();
+    manDay_.loadTexture();
+    manNight_.loadTexture();
 
     nightMapTex_ = LoadTexture("assets/map1_night.png");
 
@@ -256,9 +258,10 @@ void Game::render() {
     const raylib::Texture* ur3eTex  = &(night ? ur3eNight_ : ur3eDay_).getTexture();
     const raylib::Texture* gooseTex = &(night ? gooseNight_ : gooseDay_).getTexture();
     const raylib::Texture* solarTex = &(night ? solarNight_ : solarDay_).getTexture();
+    const raylib::Texture* manTex   = &(night ? manNight_ : manDay_).getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(ur3eTex, gooseTex, solarTex, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
+        currentLevel_->render(ur3eTex, gooseTex, solarTex, manTex, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }

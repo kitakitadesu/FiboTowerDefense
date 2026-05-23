@@ -1,7 +1,6 @@
 stages:
   - build
   - test
-  - deploy
 
 variables:
   CMAKE_BUILD_TYPE: Release
@@ -59,9 +58,9 @@ test:build_validation:
     - merge_requests
     - main
 
-# Web build + GitLab Pages (deployed on feat/web-target branch)
+# Web build + GitLab Pages (runs in parallel with Windows build)
 pages:
-  stage: deploy
+  stage: build
   image:
     name: emscripten/emsdk:5.0.7
     pull_policy: if-not-present
