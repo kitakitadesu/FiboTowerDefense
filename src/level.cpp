@@ -86,11 +86,7 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 static_cast<float>(cellR.x + cellR.w / 2),
                 static_cast<float>(cellR.y + cellR.h / 2));
             auto p = tur.update(dt, turretPos, enemyPtrs);
-            if (p) {
-                if (tur.getTurretType() == TurretType::Goose && towerHitSound_)
-                    PlaySound(*towerHitSound_);
-                projectiles_.push_back(std::move(p));
-            }
+            if (p) projectiles_.push_back(std::move(p));
         }
     }
 
@@ -138,6 +134,8 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 if (dx > 0 && dx < cellHalfW + e->getRadius()) {
                     blocked = true;
                     t->takeDamage(kEnemyDPS * dt);
+                    if (t->getTurretType() == TurretType::Goose)
+                        e->takeDamage(static_cast<int>(t->getDamage() * dt));
                     if (towerHitSound_) PlaySound(*towerHitSound_);
                     break;
                 }

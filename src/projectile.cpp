@@ -3,8 +3,8 @@
 
 #include <cmath>
 
-Projectile::Projectile(raylib::Vector2 start, Enemy* target, float speed, int damage, bool transparent)
-    : id_(IdGenerator::getNextId()), pos_(start), target_(target), speed_(speed), damage_(damage), transparent_(transparent)
+Projectile::Projectile(raylib::Vector2 start, Enemy* target, float speed, int damage)
+    : id_(IdGenerator::getNextId()), pos_(start), target_(target), speed_(speed), damage_(damage)
 {}
 
 bool Projectile::update(float dt) {
@@ -50,7 +50,6 @@ bool Projectile::update(float dt) {
 
 void Projectile::draw(bool isNight) const {
     if (impacted_) return;
-    if (transparent_) return;  // invisible projectile (e.g. goose melee indicator)
 
     if (isNight) {
         // Night: larger yellow gradient glow

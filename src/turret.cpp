@@ -71,7 +71,11 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
     if (!target) { cooldown_ = 0.0f; return nullptr; }
 
     cooldown_ = 1.0f / getFireRate();
-    return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage(), type_ == TurretType::Goose);
+
+    if (type_ == TurretType::Goose)
+        return nullptr;  // melee — contact damage handled in Level collision
+
+    return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage());
 }
 
 void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH, bool isNight) const {

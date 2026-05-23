@@ -10,7 +10,7 @@ class Enemy;
 /// Simple projectile fired from a tower toward an enemy.
 class Projectile : public IIdentifier {
 public:
-    Projectile(raylib::Vector2 start, Enemy* target, float speed, int damage, bool transparent = false);
+    Projectile(raylib::Vector2 start, Enemy* target, float speed, int damage);
 
     int getId() const override { return id_; }
 
@@ -30,5 +30,4 @@ private:
     bool            impacted_ = false;
     bool            flying_ = false;     ///< true when target lost, continue trajectory
     raylib::Vector2 dir_ = {1.0f, 0.0f}; ///< last normalized direction
-    bool            transparent_ = false;
 };
