@@ -78,7 +78,8 @@ private:
     Sprite manDay_{"assets/man_day_64x64.png"};
     Sprite manNight_{"assets/man_night_64x64.png"};
     Sprite menuImage_{"assets/GameMenu_edit2.png"};
-    std::vector<std::vector<raylib::Vector2>> laneWps_;
+    std::vector<std::vector<raylib::Vector2>> laneWps_;    // image coords (stable)
+    std::vector<std::vector<raylib::Vector2>> screenWps_;  // screen coords (scale × laneWps_)
 
     Texture2D nightMapTex_;
     bool isNight_ = false;

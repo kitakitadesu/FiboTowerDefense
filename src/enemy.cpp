@@ -13,25 +13,15 @@ std::vector<raylib::Vector2> buildLaneWaypoints(const GameBoard& board, int row)
 
     const float margin = 250.0f;
     const int   cols   = board.getColCount();
+    const float rowCenterY = GameBoard::kOriginY
+        + static_cast<float>(row) * GameBoard::kCellH + GameBoard::kCellH / 2.0f;
 
-    // Entry at right side
-    const auto cell0 = board.cellRect(cols - 1, row);
-    const float rowCenterY = cell0.y + cell0.h / 2.0f;
-
-    wps.emplace_back(static_cast<float>(cell0.x + cell0.w + margin), rowCenterY);
-
-    // Cell centers leftward
-    for (int c = cols - 1; c >= 0; --c) {
-        const auto r = board.cellRect(c, row);
-        wps.emplace_back(static_cast<float>(r.x + r.w / 2),
-                         static_cast<float>(r.y + r.h / 2));
-    }
-
-    // Exit beyond left edge
-    {
-        const auto r = board.cellRect(0, row);
-        wps.emplace_back(static_cast<float>(r.x - margin), rowCenterY);
-    }
+    // Image coordinates — stable across window resizes
+    const float rightEdge = GameBoard::kOriginX + static_cast<float>(cols) * GameBoard::kCellW;
+    wps.emplace_back(rightEdge + margin, rowCenterY);                // spawn off right
+    for (int c = cols - 1; c >= 0; --c)
+        wps.emplace_back(GameBoard::kOriginX + static_cast<float>(c) * GameBoard::kCellW + GameBoard::kCellW / 2.0f, rowCenterY);  // cell centers
+    wps.emplace_back(GameBoard::kOriginX - margin, rowCenterY);     // exit off left
 
     return wps;
 }

@@ -49,17 +49,28 @@ void Game::switchMusic(Music* newMusic) {
 }
 
 void Game::rebuildWaypoints() {
-    for (int r = 0; r < board_.getRowCount(); ++r)
-        laneWps_[r] = buildLaneWaypoints(board_, r);
-    // Snap active enemies to current waypoint positions so they don't jump
+    // Build image-coordinate waypoints once
+    if (laneWps_.empty() || laneWps_[0].empty()) {
+        laneWps_.resize(board_.getRowCount());
+        for (int r = 0; r < board_.getRowCount(); ++r)
+            laneWps_[r] = buildLaneWaypoints(board_, r);
+    }
+    // Convert to screen coords at current scale (runs on every resize)
+    const float s = board_.getScale();
+    screenWps_.resize(laneWps_.size());
+    for (size_t r = 0; r < laneWps_.size(); ++r) {
+        screenWps_[r].resize(laneWps_[r].size());
+        for (size_t i = 0; i < laneWps_[r].size(); ++i)
+            screenWps_[r][i] = laneWps_[r][i] * s;
+    }
+    // Snap active enemies to current waypoints so they don't jump on resize
     if (currentLevel_) {
         for (auto& e : currentLevel_->getEnemiesMut()) {
             const int r = e->getRow();
             const int idx = e->getWaypointIdx();
             if (r >= 0 && r < static_cast<int>(laneWps_.size()) &&
-                idx > 0 && idx < static_cast<int>(laneWps_[r].size())) {
-                e->setPosition(laneWps_[r][idx]);
-            }
+                idx > 0 && idx < static_cast<int>(screenWps_[r].size()))
+                e->setPosition(screenWps_[r][idx]);
         }
     }
 }
@@ -159,7 +170,7 @@ void Game::update(float dt) {
         UpdateMusicStream(*currentMusic_);
     }
 
-    // ── update scale on resize (track width to avoid re-entry) ──
+    // ── update scale when screen width changes ──
     {
         static int prevW = GetScreenWidth();
         const int curW = GetScreenWidth();
@@ -193,7 +204,7 @@ void Game::update(float dt) {
     // --- cooldown ---
     if (state_ == GameState::Countdown) {
         if (currentLevel_) {
-            currentLevel_->update(0.0f, laneWps_, isNight_); 
+            currentLevel_->update(0.0f, screenWps_, isNight_); 
         }
 
         countdownTimer_ -= dt; 
@@ -217,7 +228,7 @@ void Game::update(float dt) {
     if (state_ == GameState::Playing && currentLevel_) {
         int currentWave = currentLevel_->getWaveManager().getCurrentWave();
         bool shouldBeNight = (currentWave / 10) % 2 == 1;
-        currentLevel_->update(dt, laneWps_, shouldBeNight);
+        currentLevel_->update(dt, screenWps_, shouldBeNight);
 
         if (shouldBeNight != isNight_) {
             isNight_ = shouldBeNight;
