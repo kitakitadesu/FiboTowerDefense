@@ -1,6 +1,7 @@
 #include "wave_manager.hpp"
 #include "board.hpp"
 
+#include <algorithm>
 #include <cstdlib>  // std::rand
 
 WaveManager::WaveManager(const Board& board) : board_(board) {}
@@ -18,33 +19,43 @@ void WaveManager::start() {
 }
 
 std::unique_ptr<Enemy> WaveManager::update(float dt) {
-    if (!started_ || currentWave_ >= static_cast<int>(waves_.size()))
-        return nullptr;
+    if (!started_) return nullptr;
 
     if (waiting_) return nullptr; // wait for external signal
 
-    const WaveDef& wave = waves_[currentWave_];
     timer_ -= dt;
+    if (timer_ > 0.0f) return nullptr;
 
-    if (timer_ <= 0.0f && spawned_ < wave.enemyCount) {
-        // Spawn
+    const int targetCount = getCurrentWaveEnemyCount();
+    if (spawned_ < targetCount) {
         const int row = pickRow();
         ++spawned_;
-        timer_ = wave.spawnInterval;
-        return std::make_unique<Enemy>(row, wave.hp, wave.speed, wave.reward);
+        if (currentWave_ < static_cast<int>(waves_.size())) {
+            const WaveDef& w = waves_[currentWave_];
+            timer_ = w.spawnInterval;
+            return std::make_unique<Enemy>(row, w.hp, w.speed, w.reward);
+        }
+        // Past predefined waves — infinite scaling
+        timer_ = infInterval();
+        return std::make_unique<Enemy>(row, infHp(), infSpeed(), infReward());
     }
 
-    // If all spawned, caller tells us when wave is done
     return nullptr;
 }
 
 bool WaveManager::isWaveActive() const {
-    return started_ && currentWave_ < static_cast<int>(waves_.size()) &&
-           spawned_ > 0 && spawned_ >= waves_[currentWave_].enemyCount;
+    if (!started_) return false;
+    return spawned_ > 0 && spawned_ >= getCurrentWaveEnemyCount();
 }
 
 bool WaveManager::allWavesDone() const {
-    return started_ && currentWave_ >= static_cast<int>(waves_.size());
+    return false; // infinite waves — game never ends in victory
+}
+
+int WaveManager::getCurrentWaveEnemyCount() const {
+    if (currentWave_ < static_cast<int>(waves_.size()))
+        return waves_[currentWave_].enemyCount;
+    return infEnemyCount();
 }
 
 int WaveManager::pickRow() const {
@@ -60,4 +71,13 @@ void WaveManager::advanceWave() {
 
 void WaveManager::markWaiting(bool w) {
     waiting_ = w;
+}
+
+// ── Infinite wave scaling (ramps from wave 5 / index 4 onward) ──
+int   WaveManager::infEnemyCount() const { return 20 + (currentWave_ - 4) * 3; }
+int   WaveManager::infHp()    const { return 170 + (currentWave_ - 4) * 40; }
+float WaveManager::infSpeed() const { return 70.0f + (currentWave_ - 4) * 3.0f; }
+int   WaveManager::infReward() const { return 52 + (currentWave_ - 4) * 5; }
+float WaveManager::infInterval() const {
+    return std::max(0.3f, 0.8f - (currentWave_ - 4) * 0.02f);
 }
