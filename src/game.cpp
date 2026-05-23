@@ -343,7 +343,8 @@ void Game::render() {
             }
         }
         // Draw icon AFTER GuiButton (GuiButton covers with its own rect)
-        raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
+        const int iconW = MeasureText(icon, 20);
+        raylib::DrawText(icon, btnX + (btnS - iconW) / 2, btnY + (btnS - 20) / 2, 20, WHITE);
     }
 
     // ── Pause overlay ──
