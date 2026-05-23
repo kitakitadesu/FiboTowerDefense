@@ -86,7 +86,11 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 static_cast<float>(cellR.x + cellR.w / 2),
                 static_cast<float>(cellR.y + cellR.h / 2));
             auto p = tur.update(dt, turretPos, enemyPtrs);
-            if (p) projectiles_.push_back(std::move(p));
+            if (p) {
+                if (tur.getTurretType() == TurretType::Goose && towerHitSound_)
+                    PlaySound(*towerHitSound_);
+                projectiles_.push_back(std::move(p));
+            }
         }
     }
 
