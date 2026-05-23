@@ -21,8 +21,11 @@ Game::Game()
 Game::~Game() {
     UnloadMusicStream(menuMusic_);
     UnloadMusicStream(dayMusic_);
-    // UnloadMusicStream(nightMusic_);
+    UnloadMusicStream(nightMusic_);
 
+    UnloadTexture(nightMapTex_);
+
+    UnloadSound(countdownBeep_);
     UnloadSound(clickSound_);
 }
 
@@ -58,10 +61,14 @@ void Game::init() {
     board_.loadTexture();
     gooseTex_.loadTexture();
 
+    nightMapTex_ = LoadTexture("assets/map1_night.png");
+
     menuImage_.loadTexture();
     menuMusic_ = LoadMusicStream("assets/dayMusic_Signal_at_the_Tower.mp3");
     dayMusic_ = LoadMusicStream("assets/menuMusic_Clocktower_Circuit.mp3");
-    // nightMusic_ = LoadMusicStream("assets/bgm_night.mp3");
+    nightMusic_ = LoadMusicStream("assets/nightMusic_Midnight_Campus_Siege.mp3");
+
+    countdownBeep_ = LoadSound("assets/error_007.ogg");
 
     clickSound_ = LoadSound("assets/toggle_002.ogg");
 
@@ -71,6 +78,8 @@ void Game::init() {
 }
 
 void Game::start() {
+    isNight_ = false;
+    nightAlpha_ = 0.0f;
     // ถ้าอนาคตมีด่านกลางคืน ค่อยเขียน if เช็คตรงนี้
     switchMusic(&dayMusic_);
 
@@ -148,13 +157,58 @@ void Game::update(float dt) {
             state_ = GameState::Paused;
             if (currentMusic_) PauseMusicStream(*currentMusic_);
         } else {
-            state_ = GameState::Playing;
+            state_ = GameState::Countdown;
+            countdownTimer_ = 3.0f;
+            // if (currentMusic_) ResumeMusicStream(*currentMusic_);
+        }
+    }
+
+    // --- cooldown ---
+    if (state_ == GameState::Countdown) {
+        if (currentLevel_) {
+            currentLevel_->update(0.0f, laneWps_); 
+        }
+
+        countdownTimer_ -= dt; 
+
+        int currentNum = static_cast<int>(ceil(countdownTimer_));
+        if (currentNum != lastCountdownNum_ && currentNum >= 1) {
+            SetSoundPitch(countdownBeep_, 1.0f + (3 - currentNum) * 0.15f); // 1, 2, 3 เสียงสูงขึ้นเรื่อยๆ
+            PlaySound(countdownBeep_);
+            lastCountdownNum_ = currentNum;
+        }
+
+        if (countdownTimer_ <= 0.0f) {
+            state_ = GameState::Playing; 
+            SetSoundPitch(countdownBeep_, 1.5f); 
+            PlaySound(countdownBeep_);
+            lastCountdownNum_ = -1;  // reset
             if (currentMusic_) ResumeMusicStream(*currentMusic_);
         }
     }
 
     if (state_ == GameState::Playing && currentLevel_) {
         currentLevel_->update(dt, laneWps_);
+
+        int currentWave = currentLevel_->getWaveManager().getCurrentWave();
+        bool shouldBeNight = (currentWave / 10) % 2 == 1; 
+
+        if (shouldBeNight != isNight_) {
+            isNight_ = shouldBeNight;
+            if (isNight_) switchMusic(&nightMusic_);
+            else switchMusic(&dayMusic_);
+        }
+
+        float fadeSpeed = 100.0f; 
+        float targetAlpha = isNight_ ? 255.0f : 0.0f;
+        
+        if (nightAlpha_ < targetAlpha) {
+            nightAlpha_ += fadeSpeed * dt;
+            if (nightAlpha_ > targetAlpha) nightAlpha_ = targetAlpha;
+        } else if (nightAlpha_ > targetAlpha) {
+            nightAlpha_ -= fadeSpeed * dt;
+            if (nightAlpha_ < targetAlpha) nightAlpha_ = targetAlpha;
+        }
 
         if (currentLevel_->isTowerDestroyed()) {
             state_ = GameState::Lost;
@@ -172,7 +226,7 @@ void Game::render() {
     const raylib::Texture* gooseRaw = &gooseTex_.getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(gooseRaw);
+        currentLevel_->render(gooseRaw, &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }
@@ -266,12 +320,29 @@ void Game::render() {
         raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2, cy - 73, 50, WHITE);
 
         if (GuiButton({static_cast<float>(cx - 80), static_cast<float>(cy - 5), 160.0f, 45.0f}, "RESUME")) {
-            state_ = GameState::Playing;
-            if (currentMusic_) ResumeMusicStream(*currentMusic_);
+            state_ = GameState::Countdown;
+            countdownTimer_ = 3.0f;
+            // if (currentMusic_) ResumeMusicStream(*currentMusic_);
         }
         raylib::DrawText("P / SPACE to resume", cx - MeasureText("P / SPACE to resume", 14) / 2, cy + 60, 14, {150, 150, 150, 200});
     }
+    if (state_ == GameState::Countdown) {
+        const int w = GetScreenWidth(), h = GetScreenHeight();
+        
+        int displayNum = static_cast<int>(ceil(countdownTimer_)); 
+        std::string numStr = std::to_string(displayNum);
+        
+        float fraction = countdownTimer_ - (displayNum - 1);
+        int fontSize = 80 + static_cast<int>(fraction * 40); 
 
+        int textW = MeasureText(numStr.c_str(), fontSize);
+        int tx = w / 2 - textW / 2;
+        int ty = h / 2 - fontSize / 2;
+
+        DrawText(numStr.c_str(), tx + 4, ty + 4, fontSize, BLACK);
+
+        DrawText(numStr.c_str(), tx, ty, fontSize, Color{255, 140, 20, 255});
+    }
     EndDrawing();
 }
 
