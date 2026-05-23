@@ -74,6 +74,7 @@ private:
     Texture2D nightMapTex_;
     bool isNight_ = false;
     float nightAlpha_ = 0.0f;
+    bool boardIsNight_ = false;
 
     Music menuMusic_;
     Music dayMusic_;

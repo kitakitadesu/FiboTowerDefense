@@ -9,7 +9,7 @@
 
 Game::Game()
     : id_(IdGenerator::getNextId()),
-      board_("assets/map_day_0.png"),
+      board_(),
       tower_(25),
       cheatSeq_{KEY_B, KEY_O, KEY_C, KEY_C, KEY_H, KEY_I},
       gooseTex_("assets/goose_day_0.png")
@@ -210,6 +210,15 @@ void Game::update(float dt) {
             if (nightAlpha_ < targetAlpha) nightAlpha_ = targetAlpha;
         }
 
+        // Toggle board layers when alpha crosses 128 midpoint
+        if (!boardIsNight_ && nightAlpha_ >= 128.0f) {
+            board_.setNightMode(true);
+            boardIsNight_ = true;
+        } else if (boardIsNight_ && nightAlpha_ <= 128.0f && !isNight_) {
+            board_.setNightMode(false);
+            boardIsNight_ = false;
+        }
+
         if (currentLevel_->isTowerDestroyed()) {
             state_ = GameState::Lost;
         } else if (currentLevel_->getWaveManager().allWavesDone() &&
@@ -226,7 +235,7 @@ void Game::render() {
     const raylib::Texture* gooseRaw = &gooseTex_.getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(gooseRaw, &nightMapTex_, nightAlpha_);
+        currentLevel_->render(gooseRaw, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }
