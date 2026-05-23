@@ -1,5 +1,6 @@
 #pragma once
 
+#include <raylib.h> 
 #include <memory>
 #include <optional>
 #include <string>
@@ -42,6 +43,8 @@ struct WaveAnnouncement {
 class Level : public IIdentifier {
 public:
     Level(Board& grid, Tower& tower, Scoreboard& scoreboard);
+
+    ~Level();
 
     int getId() const override { return id_; }
 
@@ -129,6 +132,10 @@ private:
     int solarPlaced_       = 0;
     bool cheatMode_ = false;
     BuildMode placingMode_ = BuildMode::None;
+
+    Sound sfxSelect_;
+    Sound sfxPlace_;
+    Sound sfxError_;
 
     // Wave announcement
     std::optional<WaveAnnouncement> waveAnnounce_;
