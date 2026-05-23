@@ -12,7 +12,7 @@
 | **แพลตฟอร์ม** | เดสก์ท็อป (macOS, Linux, Windows) |
 | **เทคโนโลยี** | C++17, raylib v6.0, raylib-cpp v6.0.0 |
 
-ปกป้องหอคอยของคุณจากคลื่นศัตรูที่บุกมาจากขวาใน 5 เลน วางป้อมยิง (Shooting Turret), ป้อมประชิด (Melee Turret), และแผงโซลาร์เซลล์บนกริด 9×5 รับทองจากการฆ่าศัตรูและจากโซลาร์เซลล์เพื่อนำมาพัฒนาป้องกัน
+ปกป้องหอคอยของผู้เล่นจากคลื่นศัตรูที่บุกมาจากขวาใน 5 เลน วางป้อมยิง (UR3e), ป้อมประชิด (Goose), และแผงโซลาร์เซลล์บนกริด 9×5 รับทองจากการฆ่าศัตรูและจากโซลาร์เซลล์เพื่อนำมาพัฒนาป้องกัน
 
 ## วิธีการเล่น
 
@@ -36,6 +36,12 @@
 | **P / SPACE / ESC** | หยุด / เล่นต่อ |
 | **R** | เริ่มใหม่ (บนจบเกม) |
 | **B,O,C,C,H,I** | เปิดโหมดโกง |
+
+## Play
+
+- **Windows**: [ดาวน์โหลด](https://git.bocchichan.moe/bocchi/FiboTowerDefense/-/artifacts)
+- **Web**: [เล่นบนเบราว์เซอร์](https://fibotowerdefense-9feb08.p.bocchichan.moe/) (ประสิทธิภาพต่ำกว่า Windows)
+- **CI**: [GitLab CI](https://git.bocchichan.moe/bocchi/FiboTowerDefense)
 
 ## Prerequisites
 
@@ -116,16 +122,17 @@ Both are automatically fetched and built via CMake's FetchContent.
 
 ## CI/CD
 
-GitLab CI pipeline (`.gitlab-ci.yml`) automatically builds on:
-- **Linux** (Ubuntu 24.04 Docker)
+GitLab CI pipeline (`.gitlab-ci.yml`) automatically builds on push to `main`:
 
-**Pipeline stages:**
-1. **build:linux** - CMake configure + make on Linux
-2. **test:build_validation** - Verify executable exists and is executable
+| Job | Platform | Artifact |
+|-----|----------|----------|
+| **build:windows** | MinGW-w64 cross-compile (Linux → Windows) | `.exe` + assets → `.zip` |
+| **pages** | Emscripten (WebAssembly) | HTML5 build → GitLab Pages |
+| **test:build_validation** | PE32 check + asset verification | — |
 
-**Artifacts:** Executable stored indefinitely after successful build.
-
-**Triggers:** Runs on merge requests and main branch pushes.
+**Windows**: Download the `.zip` artifact from the latest pipeline.
+**Web**: Play at [fibotowerdefense-9feb08.p.bocchichan.moe](https://fibotowerdefense-9feb08.p.bocchichan.moe/) (deployed on each `main` push).
+**CI**: [git.bocchichan.moe/bocchi/FiboTowerDefense](https://git.bocchichan.moe/bocchi/FiboTowerDefense)
 
 ## Development
 
