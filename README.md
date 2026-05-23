@@ -2,18 +2,18 @@
 
 > เกม Tower Defense แนววางแผน ป้องกันฐาน จากคลื่นศัตรูที่เดินจากขวาไปซ้าย
 
-| | |
-|---|---|
+| | | |
+|---|---|---|
 | **Genre** | Tower Defense |
 | **Player** | Single Player |
-| **Platform** | Windows / macOS / Linux |
-| **Technology** | C++17 · raylib v6.0 · raylib-cpp v6.0.0 · EnTT · raygui · Emscripten · MinGW-w64 · CMake |
+| **Platform** | Windows / macOS / Linux / Web |
+| **Technology** | C++17 · raylib v6.0 · raylib-cpp v6.0.0 · raygui · Emscripten · MinGW-w64 · CMake |
 
 ---
 
 ## 📹 Demo Video
 
-▶️ **[Demo Video](https://youtu.be/PYPrsPVuYUo)**
+▶️ **[Demo Video](https://www.youtube.com/watch?v=PYPrsPVu_YU)**
 
 ---
 
@@ -38,8 +38,8 @@
 
 | Unit | Cost | Description |
 |---|---|---|
-| 🗼 **Shooting Turret** | 100g | ยิงกระสุนใส่ศัตรูในเลนเดียวกัน ระยะยิงไม่จำกัด |
-| ⚔️ **Melee Turret** | 80g | โจมตีศัตรูในระยะใกล้ ดาเมจสูงกว่า |
+| 🗼 **UR3e (Shooting Turret)** | 100g | ยิงกระสุนใส่ศัตรูในเลนเดียวกัน ระยะยิงไม่จำกัด |
+| ⚔️ **Goose (Melee Turret)** | 80g | โจมตีศัตรูในระยะใกล้ ดาเมจสูงกว่า |
 | ☀️ **Solar Cell** | 60g | ผลิตทองแบบ passive ตามเวลา อัปเกรดได้ |
 
 ### ⚡ Game Mechanics
@@ -48,7 +48,7 @@
 - **Upgrade** — เพิ่มดาเมจ, อัตรายิง, และระยะโจมตี; กดที่ป้อมเพื่อดูตัวเลือก
 - **Sell** — ขายป้อมคืนได้บางส่วนเพื่อนำทองไปใช้ที่อื่น
 - **Tower HP** — ศัตรูที่รอดผ่านไปได้จะลด HP; ถ้า HP = 0 แพ้ทันที
-- **Enemy Waves** — มี 5 คลื่น ยากขึ้นเรื่อยๆ ทั้งพลังชีวิต ความเร็ว และจำนวน
+- **Enemy Waves** — คลื่นไม่จำกัด ยากขึ้นเรื่อยๆ ทั้งพลังชีวิต ความเร็ว และจำนวน
 - **Day & Night** — ทุก 10 คลื่น แผนที่จะเปลี่ยนเป็นกลางคืนพร้อมเพลงใหม่
 - **Score** — เพิ่มตามจำนวนศัตรูที่กำจัด บันทึก High Score ได้หลังจบเกม
 
@@ -56,14 +56,15 @@
 
 | Key | Action |
 |---|---|
-| `T` | เลือกโหมดวาง Shooting Turret |
-| `M` | เลือกโหมดวาง Melee Turret |
+| `T` | เลือกโหมดวาง UR3e (Shooting Turret) |
+| `M` | เลือกโหมดวาง Goose (Melee Turret) |
 | `S` | เลือกโหมดวาง Solar Cell |
 | Left Click | วางสิ่งของ / เลือกป้อมที่มีอยู่ |
 | Right Click | ยกเลิกโหมดก่อสร้าง |
-| `ESC` | ปิดหน้าต่างข้อมูลป้อม / ยกเลิกโหมดก่อสร้าง |
 | `P` / `Space` | Pause / Resume (มีนับถอยหลัง 3 วิก่อน resume) |
 | `R` | เริ่มเกมใหม่ (หน้าจบเกม) |
+| `B,O,C,C,H,I` | เปิดโหมดโกง |
+| คลิกปุ่ม **CHEATS** (ซ้ายล่าง) | เปิด/ปิดเมนูโกง (เมื่อโหมดโกงเปิดอยู่) |
 
 ---
 
@@ -93,38 +94,26 @@ sudo apt-get install cmake build-essential
 
 **macOS / Linux**
 ```bash
-mkdir build && cd build
-cmake ..
-make
+cmake -B build
+cmake --build build
+./build/FiboTowerDefense
 ```
 
 **Windows (Visual Studio)**
 ```bash
-mkdir build && cd build
-cmake ..
-cmake --build . --config Release
+cmake -B build
+cmake --build build --config Release
+.\build\Release\FiboTowerDefense.exe
 ```
 
 **Windows (MinGW)**
 ```bash
-mkdir build && cd build
-cmake .. -G "MinGW Makefiles"
-mingw32-make
+cmake -B build -G "MinGW Makefiles"
+cmake --build build
+.\build\FiboTowerDefense.exe
 ```
 
-### Run
-
-**macOS / Linux**
-```bash
-./FiboTowerDefense
-```
-
-**Windows**
-```bash
-.\Release\FiboTowerDefense.exe
-```
-
-> Dependencies ทั้งหมด (raylib, raylib-cpp, EnTT, raygui) จะถูกดาวน์โหลดและ build อัตโนมัติผ่าน CMake FetchContent ไม่ต้องติดตั้งเพิ่ม
+> Dependencies ทั้งหมด (raylib, raylib-cpp, raygui) จะถูกดาวน์โหลดและ build อัตโนมัติผ่าน CMake FetchContent ไม่ต้องติดตั้งเพิ่ม
 
 ---
 
@@ -138,22 +127,36 @@ FiboTowerDefense/
 ├── include/                 # Header files (.hpp)
 │   ├── game.hpp
 │   ├── level.hpp
-│   ├── board.hpp
+│   ├── game_board.hpp
+│   ├── game_grid.hpp
 │   ├── enemy.hpp
 │   ├── turret.hpp
+│   ├── projectile.hpp
 │   ├── solar_cell.hpp
 │   ├── tower.hpp
+│   ├── sprite.hpp
 │   ├── wave_manager.hpp
+│   ├── scoreboard.hpp
+│   ├── high_score_table.hpp
+│   ├── Board/
+│   │   └── board.h
 │   └── ...
 └── src/                     # Source files (.cpp)
     ├── main.cpp
     ├── game.cpp             # Game state machine, เมนู, pause
     ├── level.cpp            # Gameplay logic, UI panel
-    ├── board.cpp            # กริดและแผนที่
+    ├── game_board.cpp       # กริดและแผนที่
+    ├── game_grid.cpp
     ├── enemy.cpp            # พฤติกรรมศัตรู
     ├── turret.cpp           # ระบบป้อม
+    ├── projectile.cpp
     ├── solar_cell.cpp       # ระบบโซลาร์เซลล์
-    └── wave_manager.cpp     # ระบบคลื่นศัตรู
+    ├── sprite.cpp
+    ├── scoreboard.cpp
+    ├── high_score_table.cpp
+    ├── wave_manager.cpp     # ระบบคลื่นศัตรู
+    └── Board/
+        └── board.cpp
 ```
 
 ---
@@ -163,7 +166,7 @@ FiboTowerDefense/
 | Name | Student ID |
 |---|---|
 | นายโชติพิสุทธิ์ มงคลวิสุทธิ์ | 68340500020 |
-| นายธนนรินท์ ใจแจ้ง | 68340500029 |
+| นายธนนรินทร์ ใจแจ้ง | 68340500029 |
 | นายนภัสกรณ์ โพธิ์หล้า | 68340500034 |
 | น.ส.สุพรรณิการ์ วังกุ่ม | 68340500081 |
 
@@ -175,5 +178,4 @@ FiboTowerDefense/
 |---|---|---|
 | [raylib](https://www.raylib.com/) | 6.0 | zlib |
 | [raylib-cpp](https://github.com/robloach/raylib-cpp) | 6.0.0 | zlib |
-| [raygui](https://github.com/raysan5/raygui) | latest | zlib |
-| [EnTT](https://github.com/skypjack/entt) | latest | MIT |
+| [raygui](https://github.com/raysan5/raygui) | latest | zlib | 

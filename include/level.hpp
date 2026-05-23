@@ -7,8 +7,6 @@
 
 #include <raylib.h>
 
-#include <entt/entt.hpp>
-
 #include "game_board.hpp"
 #include "enemy.hpp"
 #include "id_generator.hpp"
@@ -30,11 +28,6 @@ struct WaveAnnouncement {
     std::string text;
     float life = 3.0f;
     float maxLife = 3.0f;
-};
-
-/// Event fired when an enemy is killed (not escaped).
-struct EnemyKilledEvent {
-    raylib::Vector2 position;
 };
 
 /// Container for all gameplay entities in one level.
@@ -80,14 +73,6 @@ public:
                 const Texture2D* nightMap = nullptr, float nightAlpha = 0.0f);
     void renderUI();
 
-    // --- events ---
-    entt::dispatcher& events() { return events_; }
-    void onEnemyKilled(const EnemyKilledEvent& event);
-    void listenToEvents();
-
-    // --- stubs for Phase 3+ ---
-    void removeTurret(int x, int y) { (void)x; (void)y; }
-    void updateBossAttacks(float) {}
     void setTowerHitSound(Sound* s) { towerHitSound_ = s; }
     void setEnemyHitSound(Sound* s) { enemyHitSound_ = s; }
     void setEnemyDeathSound(Sound* s) { enemyDeathSound_ = s; }
@@ -98,8 +83,6 @@ private:
     GameBoard& grid_;
     Tower& tower_;
     Scoreboard& scoreboard_;
-
-    entt::dispatcher events_;
 
     std::vector<Turret> turrets_;
     std::vector<std::unique_ptr<Enemy>> enemies_;

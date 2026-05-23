@@ -5,44 +5,35 @@
 
 Projectile::Projectile(raylib::Vector2 start, Enemy* target, float speed, int damage)
     : id_(IdGenerator::getNextId()), pos_(start), target_(target), speed_(speed), damage_(damage)
-{}
+{
+    // Compute initial direction toward target (straight line, no homing)
+    if (target) {
+        const raylib::Vector2 toTarget = target->getPosition() - start;
+        const float d = toTarget.Length();
+        if (d > 0.001f) dir_ = toTarget / d;
+    }
+}
 
 bool Projectile::update(float dt) {
     if (impacted_) return true;
 
-    // Free-flying after target lost — continue in last direction
-    if (flying_) {
-        pos_ = pos_ + dir_ * speed_ * dt;
-        // Impact when off-screen (past right edge or far left)
-        if (pos_.x > 2200.0f || pos_.x < -200.0f) {
+    // Advance in straight line
+    pos_ = pos_ + dir_ * speed_ * dt;
+
+    // Check if near target (collision radius)
+    if (target_ && target_->isAlive()) {
+        const raylib::Vector2 diff = target_->getPosition() - pos_;
+        if (diff.LengthSqr() < 256.0f) {  // 16^2
+            target_->takeDamage(damage_);
             impacted_ = true;
             return true;
         }
-        return false;
     }
 
-    if (!target_ || !target_->isAlive()) {
-        // Target died — save direction and keep flying
-        flying_ = true;
-        return false;
-    }
-
-    const raylib::Vector2 diff = target_->getPosition() - pos_;
-    const float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
-
-    if (dist < 16.0f) {
-        // Hit
-        target_->takeDamage(damage_);
+    // Impact when off-screen
+    if (pos_.x > 2200.0f || pos_.x < -200.0f || pos_.y < -200.0f || pos_.y > 1200.0f) {
         impacted_ = true;
         return true;
-    }
-
-    const float step = speed_ * dt;
-    if (dist <= step) {
-        pos_ = target_->getPosition();
-    } else {
-        dir_ = diff / dist;
-        pos_ = pos_ + dir_ * step;
     }
 
     return false;

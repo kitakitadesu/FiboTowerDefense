@@ -38,18 +38,9 @@ void Level::addEnemy(std::unique_ptr<Enemy> e) {
     enemies_.push_back(std::move(e));
 }
 
-void Level::listenToEvents() {
-    events_.sink<EnemyKilledEvent>().connect<&Level::onEnemyKilled>(this);
-}
-
-void Level::onEnemyKilled(const EnemyKilledEvent& /*event*/) {
-    // Future: particle effects, score popup, etc.
-}
-
 void Level::start() {
     waveMgr_.start();
     totalEnemiesThisWave_ = waveMgr_.getCurrentWaveEnemyCount();
-    listenToEvents();
 }
 
 void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& laneWps, bool isNight) {
@@ -191,7 +182,6 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 "+" + std::to_string(e->getReward()),
                 GOLD, 1.0f, 1.0f, {0.0f, -40.0f}
             });
-            events_.trigger(EnemyKilledEvent{e->getPosition()});
         }
         if (e->isEscaped()) {      
             if (!cheatMode_) {
