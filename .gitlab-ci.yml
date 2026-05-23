@@ -6,39 +6,55 @@ stages:
 variables:
   CMAKE_BUILD_TYPE: Release
 
-# Linux build (Docker)
-build:linux:
+# Windows cross-compile (MinGW-w64 on Linux Docker)
+build:windows:
   stage: build
-  image: ubuntu:24.04
+  image:
+    name: ubuntu:24.04
+    pull_policy: if-not-present
   before_script:
     - apt-get update -qq
-    - apt-get install -y -qq cmake make g++ git libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxfixes-dev libgl-dev
+    - apt-get install -y -qq cmake make git mingw-w64
   script:
-    - mkdir -p build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ..
+    - mkdir -p build-windows
+    - cd build-windows
+    - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain-mingw.cmake ..
     - make -j$(nproc)
+    # Package exe + assets (preserve assets/ dir)
+    - cd ..
+    - apt-get install -y -qq zip
+    - mkdir -p package
+    - cp build-windows/FiboTowerDefense.exe package/
+    - cp -r assets package/
+    - cd package && zip -r ../FiboTowerDefense-windows.zip . && cd ..
   artifacts:
     paths:
-      - build/FiboTowerDefense
+      - FiboTowerDefense-windows.zip
   cache:
+    key:
+      files:
+        - CMakeLists.txt
+      prefix: "mingw-deps"
     paths:
-      - build/_deps/
+      - build-windows/_deps/
   except:
     - feat/web-target
 
 # Build validation test
 test:build_validation:
   stage: test
-  image: ubuntu:24.04
+  image:
+    name: ubuntu:24.04
+    pull_policy: if-not-present
   dependencies:
-    - build:linux
+    - build:windows
   before_script:
-    - apt-get update -qq
-    - apt-get install -y -qq file
-  script:
-    - file build/FiboTowerDefense
-    - test -x build/FiboTowerDefense || (echo "Executable not found or not executable" && exit 1)
+    - apt-get update -qq && apt-get install -y -qq file unzip
+  script: |
+    unzip -o FiboTowerDefense-windows.zip -d test-exe
+    file test-exe/FiboTowerDefense.exe
+    file test-exe/FiboTowerDefense.exe | grep -qiE PE32
+    if ! test -f test-exe/assets/map_day_0.png; then echo "Missing asset: assets/map_day_0.png"; exit 1; fi
   only:
     - merge_requests
     - main
@@ -46,7 +62,9 @@ test:build_validation:
 # Web build + GitLab Pages (deployed on feat/web-target branch)
 pages:
   stage: deploy
-  image: emscripten/emsdk:4.0.23
+  image:
+    name: emscripten/emsdk:4.0.23
+    pull_policy: if-not-present
   before_script:
     # emsdk images ship cmake 3.22 (Ubuntu 22.04 base); raylib needs ≥3.25
     - pip3 install cmake --upgrade -q
@@ -58,6 +76,13 @@ pages:
     - cp build-web/FiboTowerDefense.js public/
     - cp build-web/FiboTowerDefense.wasm public/
     - cp build-web/FiboTowerDefense.data public/
+  cache:
+    key:
+      files:
+        - CMakeLists.txt
+      prefix: "emscripten-deps"
+    paths:
+      - build-web/_deps/
   artifacts:
     paths:
       - public
