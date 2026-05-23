@@ -37,12 +37,12 @@ bool Projectile::update(float dt) {
 void Projectile::draw(bool isNight) const {
     if (impacted_) return;
     if (isNight) {
-        // Night: brighter, larger yellow glow
-        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 12, {255, 255, 0, 120});
-        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 5, {255, 255, 150, 255});
+        // Night: larger yellow gradient glow
+        DrawCircleGradient(pos_, 14, {255, 255, 150, 120}, {255, 255, 0, 0});
+        DrawCircleGradient(pos_, 6,  {255, 255, 200, 200}, {255, 255, 200, 0});
     } else {
-        // Day: normal glow
-        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 8, {255, 255, 0, 100});
-        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 4, {255, 255, 200, 255});
+        // Day: smaller yellow gradient glow
+        DrawCircleGradient(pos_, 10, {255, 255, 150, 100}, {255, 255, 0, 0});
+        DrawCircleGradient(pos_, 4,  {255, 255, 200, 200}, {255, 255, 200, 0});
     }
 }
