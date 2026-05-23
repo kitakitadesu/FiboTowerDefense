@@ -67,6 +67,7 @@ private:
     std::vector<int> cheatSeq_;
 
     Sprite gooseTex_;
+    Sprite menuImage_{"assets/GameMenu_edit2.png"};
     std::vector<std::vector<raylib::Vector2>> laneWps_;
 
     Music menuMusic_;
