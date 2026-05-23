@@ -26,6 +26,10 @@ build:windows:
     paths:
       - FiboTowerDefense-windows.zip
   cache:
+    key:
+      files:
+        - CMakeLists.txt
+      prefix: "mingw-deps"
     paths:
       - build-windows/_deps/
   except:
@@ -64,6 +68,13 @@ pages:
     - cp build-web/FiboTowerDefense.js public/
     - cp build-web/FiboTowerDefense.wasm public/
     - cp build-web/FiboTowerDefense.data public/
+  cache:
+    key:
+      files:
+        - CMakeLists.txt
+      prefix: "emscripten-deps"
+    paths:
+      - build-web/_deps/
   artifacts:
     paths:
       - public
