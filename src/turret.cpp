@@ -53,8 +53,7 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
         const float dx = e->getPosition().x - screenPos.x;
 
     if (type_ == TurretType::UR3e) {
-            // Unlimited rightward, limited leftward (blocking enemies at turret)
-            if (dx < -kLeftTolerance) continue;
+            // Full lane — no direction restriction
             const float dist = std::abs(dx);
             if (dist < nearest) { nearest = dist; target = e; }
         } else {
