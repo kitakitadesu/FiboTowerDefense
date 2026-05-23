@@ -166,6 +166,9 @@ void Game::update(float dt) {
         int key = GetKeyPressed();
         while (key > 0) { handleCheatKey(key); key = GetKeyPressed(); }
         if (currentLevel_) currentLevel_->setCheatMode(cheatMode_);
+        // Toggle cheat panel with F1 when cheat mode active
+        if (cheatMode_ && IsKeyPressed(KEY_F1))
+            cheatPanelOpen_ = !cheatPanelOpen_;
     }
 
     // ── pause toggle ──
@@ -268,7 +271,9 @@ void Game::render() {
 
     // ── Cheat indicator (hidden on menu) ──
     if (cheatMode_ && state_ != GameState::Menu) {
-        raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, Color{255, 140, 20, 255});
+        const char* hint = cheatPanelOpen_ ? "" : " [F1]";
+        raylib::DrawText(TextFormat("CHEAT ON%s", hint), GetScreenWidth() - 150, GetScreenHeight() - 40, 20, Color{255, 140, 20, 255});
+        if (cheatPanelOpen_) renderCheatPanel();
     }
 
     // ── Menu ──
@@ -377,6 +382,54 @@ void Game::render() {
         DrawText(numStr.c_str(), tx, ty, fontSize, Color{255, 140, 20, 255});
     }
     EndDrawing();
+}
+
+void Game::renderCheatPanel() {
+    const int w = GetScreenWidth(), h = GetScreenHeight();
+    const int pw = 260, ph = 240;
+    const int px = (w - pw) / 2, py = (h - ph) / 2;
+
+    // Backdrop
+    DrawRectangle(0, 0, w, h, {0, 0, 0, 100});
+    DrawRectangle(px, py, pw, ph, {20, 20, 30, 240});
+    DrawRectangleLines(px, py, pw, ph, {255, 140, 20, 200});
+
+    raylib::DrawText("CHEAT MENU", px + 60, py + 10, 20, Color{255, 140, 20, 255});
+
+    int by = py + 40;
+    const int bw = 220, bh = 30, bx = px + 20;
+
+    if (GuiButton({(float)bx, (float)by, (float)bw, (float)bh}, "+1000 GOLD")) {
+        if (currentLevel_) currentLevel_->addCurrency(1000);
+    }
+    by += bh + 6;
+
+    if (GuiButton({(float)bx, (float)by, (float)bw, (float)bh}, "SKIP WAVE")) {
+        if (currentLevel_) {
+            auto& wm = currentLevel_->getWaveManager();
+            if (!wm.allWavesDone())
+                wm.advanceWave();
+        }
+    }
+    by += bh + 6;
+
+    if (GuiButton({(float)bx, (float)by, (float)bw, (float)bh}, "KILL ALL")) {
+        if (currentLevel_) {
+            for (auto& e : const_cast<std::vector<std::unique_ptr<Enemy>>&>(currentLevel_->getEnemies()))
+                e->takeDamage(9999);
+        }
+    }
+    by += bh + 6;
+
+    const char* godLabel = godMode_ ? "GOD MODE [ON]" : "GOD MODE [OFF]";
+    if (GuiButton({(float)bx, (float)by, (float)bw, (float)bh}, godLabel)) {
+        godMode_ = !godMode_;
+    }
+    by += bh + 6;
+
+    if (GuiButton({(float)bx, (float)by, (float)bw, (float)bh}, "CLOSE")) {
+        cheatPanelOpen_ = false;
+    }
 }
 
 void Game::renderEndScreen() {

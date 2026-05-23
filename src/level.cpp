@@ -86,7 +86,14 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 static_cast<float>(cellR.x + cellR.w / 2),
                 static_cast<float>(cellR.y + cellR.h / 2));
             auto p = tur.update(dt, turretPos, enemyPtrs);
-            if (p) projectiles_.push_back(std::move(p));
+            if (p) {
+                if (tur.getTurretType() == TurretType::Goose) {
+                    // Goose melee — no projectile, play punch
+                    if (towerHitSound_) PlaySound(*towerHitSound_);
+                } else {
+                    projectiles_.push_back(std::move(p));
+                }
+            }
         }
     }
 
@@ -776,7 +783,7 @@ clickHandled:
         int y = margin + s(12);
 
         // Lives
-        std::string livesStr = "\xE2\x99\xA5  " + std::to_string(tower_.getHp()) + "/" + std::to_string(tower_.getMaxHp());
+        std::string livesStr = "HP  " + std::to_string(tower_.getHp()) + "/" + std::to_string(tower_.getMaxHp());
         raylib::DrawText(livesStr.c_str(), margin + s(14), y, fs, {255, 80, 80, 255});
         y += rowH;
 
@@ -786,7 +793,7 @@ clickHandled:
         y += rowH;
 
         // Wave
-        std::string waveStr = "\xE2\x9A\x94  Wave " + std::to_string(waveMgr_.getCurrentWave() + 1);
+        std::string waveStr = "Wave " + std::to_string(waveMgr_.getCurrentWave() + 1);
         raylib::DrawText(waveStr.c_str(), margin + s(14), y, sfs, LIGHTGRAY);
         const int barY = y + s(22);
         const int barW = pw - s(30);
@@ -799,11 +806,11 @@ clickHandled:
         y = barY + barH + 10;
 
         // Structures
-        std::string turretStr = "\xE2\x9B\x94 " + std::to_string(turretsPlaced_) + "  \xE2\x98\x80 " + std::to_string(solarPlaced_);
+        std::string turretStr = std::to_string(turretsPlaced_) + "  " + std::to_string(solarPlaced_);
         raylib::DrawText(turretStr.c_str(), margin + s(14), y, sfs, LIGHTGRAY);
 
         // Score (top-right)
-        std::string scoreStr = "\xE2\x98\x85  " + std::to_string(scoreboard_.getCurrentScore());
+        std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
         const int scoreW = MeasureText(scoreStr.c_str(), fs) + s(30);
         const int scoreX = scrW - scoreW - margin;
         DrawRectangle(scoreX, margin, scoreW, fs + 30, {15, 15, 25, 200});

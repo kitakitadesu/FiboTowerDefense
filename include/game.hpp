@@ -49,6 +49,7 @@ public:
 private:
     void rebuildWaypoints();
     void handleCheatKey(int key);
+    void renderCheatPanel();
 
     int id_;
     bool running_ = true;
@@ -62,6 +63,8 @@ private:
 
     bool bossDefeated_ = false;
     bool cheatMode_ = false;
+    bool cheatPanelOpen_ = false;
+    bool godMode_ = false;
     int  cheatIdx_ = 0;
     std::vector<int> cheatSeq_;
 
