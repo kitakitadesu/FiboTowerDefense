@@ -143,7 +143,13 @@ void Game::update(float dt) {
     // ── pause toggle ──
     if ((state_ == GameState::Playing || state_ == GameState::Paused) &&
         (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE))) {
-        state_ = (state_ == GameState::Playing) ? GameState::Paused : GameState::Playing;
+        if (state_ == GameState::Playing) {
+            state_ = GameState::Paused;
+            if (currentMusic_) PauseMusicStream(*currentMusic_);
+        } else {
+            state_ = GameState::Playing;
+            if (currentMusic_) ResumeMusicStream(*currentMusic_);
+        }
     }
 
     if (state_ == GameState::Playing && currentLevel_) {
@@ -237,7 +243,13 @@ void Game::render() {
 
         if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
                        static_cast<float>(btnS), static_cast<float>(btnS)}, "")) {
-            state_ = (state_ == GameState::Paused) ? GameState::Playing : GameState::Paused;
+            if (state_ == GameState::Paused) {
+                state_ = GameState::Playing;
+                if (currentMusic_) ResumeMusicStream(*currentMusic_);
+            } else {
+                state_ = GameState::Paused;
+                if (currentMusic_) PauseMusicStream(*currentMusic_);
+            }
         }
     }
 
@@ -254,6 +266,7 @@ void Game::render() {
 
         if (GuiButton({static_cast<float>(cx - 80), static_cast<float>(cy - 5), 160.0f, 45.0f}, "RESUME")) {
             state_ = GameState::Playing;
+            if (currentMusic_) ResumeMusicStream(*currentMusic_);
         }
         raylib::DrawText("P / SPACE to resume", cx - MeasureText("P / SPACE to resume", 14) / 2, cy + 60, 14, {150, 150, 150, 200});
     }
