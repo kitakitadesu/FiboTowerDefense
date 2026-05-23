@@ -331,7 +331,6 @@ void Game::render() {
         const char* icon = (state_ == GameState::Paused) ? "|>" : "||";
 
         DrawRectangle(btnX, btnY, btnS, btnS, {15, 15, 25, 200});
-        raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
 
         if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
                        static_cast<float>(btnS), static_cast<float>(btnS)}, "")) {
@@ -343,6 +342,8 @@ void Game::render() {
                 if (currentMusic_) PauseMusicStream(*currentMusic_);
             }
         }
+        // Draw icon AFTER GuiButton (GuiButton covers with its own rect)
+        raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
     }
 
     // ── Pause overlay ──
