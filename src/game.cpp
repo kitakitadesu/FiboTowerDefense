@@ -66,23 +66,6 @@ void Game::rebuildWaypoints() {
             screenWps_[r][i] = laneWps_[r][i] * s;
     }
 }
-    screenWps_.resize(laneWps_.size());
-    for (size_t r = 0; r < laneWps_.size(); ++r) {
-        screenWps_[r].resize(laneWps_[r].size());
-        for (size_t i = 0; i < laneWps_[r].size(); ++i)
-            screenWps_[r][i] = laneWps_[r][i] * s;
-    }
-    // Snap active enemies to current waypoints so they don't jump on resize
-    if (currentLevel_) {
-        for (auto& e : currentLevel_->getEnemiesMut()) {
-            const int r = e->getRow();
-            const int idx = e->getWaypointIdx();
-            if (r >= 0 && r < static_cast<int>(laneWps_.size()) &&
-                idx > 0 && idx < static_cast<int>(screenWps_[r].size()))
-                e->setPosition(screenWps_[r][idx]);
-        }
-    }
-}
 
 void Game::handleCheatKey(int key) {
     if (cheatMode_) return;
