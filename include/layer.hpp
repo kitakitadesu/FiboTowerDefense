@@ -11,13 +11,15 @@ enum class LayerFlags {
     Translucent = 1 << 0,  ///< rendered at 40% opacity
 };
 
-/// One loaded layer with texture and metadata.
+/// One loaded layer with textures and metadata.
 struct Layer {
     std::string name;
-    std::string path;
+    std::string dayPath;
+    std::string nightPath;
     int         zIndex = 0;
     LayerFlags  flags  = LayerFlags::None;
-    raylib::Texture texture;
+    raylib::Texture dayTex;
+    raylib::Texture nightTex;
 };
 
 /// A layer hitbox: row + X range in image coords. Enemies passing through
@@ -39,11 +41,11 @@ public:
     LayerManager& operator=(const LayerManager&) = delete;
     void load(const std::string& assetDir);
 
-    /// Reload all textures from alternate dir (e.g. "assets/night").
-    /// Clears existing textures, reloads from new path, re-uploads to GPU.
-    void setNightMode(bool night);
-
+    /// Upload all textures to GPU (call after Window created).
     void upload();
+
+    /// Toggle night mode (no reload, pre-loaded textures).
+    void setNightMode(bool n) { nightMode_ = n; }
     void setScale(float s) { scale_ = s; }
 
     /// Draw layers with zIndex in [minZ, maxZ] (inclusive).
@@ -62,6 +64,7 @@ public:
 private:
     std::vector<Layer> layers_;
     std::vector<LayerHitbox> hitboxes_;
+    bool nightMode_ = false;
     float imageW_ = 0.0f;
     float imageH_ = 0.0f;
     float scale_  = 1.0f;
