@@ -28,4 +28,6 @@ private:
     float           speed_;
     int             damage_;
     bool            impacted_ = false;
+    bool            flying_ = false;     ///< true when target lost, continue trajectory
+    raylib::Vector2 dir_ = {1.0f, 0.0f}; ///< last normalized direction
 };

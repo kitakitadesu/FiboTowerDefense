@@ -9,9 +9,22 @@ Projectile::Projectile(raylib::Vector2 start, Enemy* target, float speed, int da
 
 bool Projectile::update(float dt) {
     if (impacted_) return true;
+
+    // Free-flying after target lost — continue in last direction
+    if (flying_) {
+        pos_ = pos_ + dir_ * speed_ * dt;
+        // Impact when off-screen (past right edge or far left)
+        if (pos_.x > 2200.0f || pos_.x < -200.0f) {
+            impacted_ = true;
+            return true;
+        }
+        return false;
+    }
+
     if (!target_ || !target_->isAlive()) {
-        impacted_ = true;
-        return true;
+        // Target died — save direction and keep flying
+        flying_ = true;
+        return false;
     }
 
     const raylib::Vector2 diff = target_->getPosition() - pos_;
@@ -28,7 +41,8 @@ bool Projectile::update(float dt) {
     if (dist <= step) {
         pos_ = target_->getPosition();
     } else {
-        pos_ = pos_ + (diff / dist * step);
+        dir_ = diff / dist;
+        pos_ = pos_ + dir_ * step;
     }
 
     return false;
