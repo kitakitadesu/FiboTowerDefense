@@ -33,10 +33,7 @@ public:
     int  getCurrentWave() const { return currentWave_; }
     int  getWaveCount()   const { return static_cast<int>(waves_.size()); }
     int  getSpawnedCount() const { return spawned_; }
-    int  getCurrentWaveEnemyCount() const {
-        return (currentWave_ < static_cast<int>(waves_.size()))
-            ? waves_[currentWave_].enemyCount : 0;
-    }
+    int  getCurrentWaveEnemyCount() const;
 
     /// Call when current wave enemies are all dead/escaped to advance.
     void advanceWave();
@@ -52,4 +49,11 @@ private:
     bool  waiting_    = false;
 
     int  pickRow() const;
+
+    // Infinite wave scaling (ramps past last predefined wave)
+    int     infEnemyCount() const;
+    int     infHp()    const;
+    float   infSpeed() const;
+    int     infReward() const;
+    float   infInterval() const;
 };

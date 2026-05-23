@@ -192,10 +192,10 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     if (waveMgr_.isWaveActive() && enemies_.empty()) {
         waveMgr_.advanceWave();
         const int nextWave = waveMgr_.getCurrentWave() + 1;
-        const int totalWaves = waveMgr_.getWaveCount();
+        const bool finalWave = (nextWave == waveMgr_.getWaveCount());
 
-        // Announce "Wave N!" (or "Final Wave!" on last wave)
-        if (nextWave == totalWaves) {
+        // Announce "Wave N!" (or "Final Wave!" on last predefined wave)
+        if (finalWave) {
             waveAnnounce_ = {"FINAL WAVE!", 3.0f, 3.0f};
         } else {
             waveAnnounce_ = {"Wave " + std::to_string(nextWave) + "!", 3.0f, 3.0f};
@@ -685,8 +685,7 @@ clickHandled:
         y += rowH;
 
         // Wave
-        std::string waveStr = "\xE2\x9A\x94  Wave " + std::to_string(waveMgr_.getCurrentWave() + 1)
-                            + "/" + std::to_string(waveMgr_.getWaveCount());
+        std::string waveStr = "\xE2\x9A\x94  Wave " + std::to_string(waveMgr_.getCurrentWave() + 1);
         raylib::DrawText(waveStr.c_str(), margin + s(14), y, sfs, LIGHTGRAY);
         const int barY = y + s(22);
         const int barW = pw - s(30);
