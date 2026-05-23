@@ -27,6 +27,7 @@ Game::~Game() {
 
     UnloadSound(countdownBeep_);
     UnloadSound(clickSound_);
+    UnloadSound(gameOverSound_);
 }
 
 void Game::switchMusic(Music* newMusic) {
@@ -35,6 +36,10 @@ void Game::switchMusic(Music* newMusic) {
             StopMusicStream(*currentMusic_);
         }
         currentMusic_ = newMusic;
+        PlayMusicStream(*currentMusic_);
+    } else {
+        // เพลงเดิม → หยุดแล้วเล่นใหม่ตั้งแต่ต้น
+        StopMusicStream(*currentMusic_);
         PlayMusicStream(*currentMusic_);
     }
 }
@@ -69,7 +74,7 @@ void Game::init() {
     nightMusic_ = LoadMusicStream("assets/nightMusic_Midnight_Campus_Siege.mp3");
 
     countdownBeep_ = LoadSound("assets/error_007.ogg");
-
+    gameOverSound_ = LoadSound("assets/gameover.mp3");  
     clickSound_ = LoadSound("assets/toggle_002.ogg");
 
     scoreboard_.load("scores.dat");
@@ -80,7 +85,6 @@ void Game::init() {
 void Game::start() {
     isNight_ = false;
     nightAlpha_ = 0.0f;
-    // ถ้าอนาคตมีด่านกลางคืน ค่อยเขียน if เช็คตรงนี้
     switchMusic(&dayMusic_);
 
     board_.updateScale(GetScreenWidth());
@@ -117,6 +121,7 @@ void Game::resetForRestart() {
     nameInput_[0] = '\0';
     scoreSaved_ = false;
     nameEditing_ = false;
+    gameOverSoundPlayed_ = false;
     // Tower will be reset in start()
     // Textures stay loaded (they have the GL context)
     start();
@@ -211,6 +216,10 @@ void Game::update(float dt) {
         }
 
         if (currentLevel_->isTowerDestroyed()) {
+            if (!gameOverSoundPlayed_) {
+                PlaySound(gameOverSound_);
+                gameOverSoundPlayed_ = true;
+            }
             state_ = GameState::Lost;
         } else if (currentLevel_->getWaveManager().allWavesDone() &&
                    currentLevel_->getEnemies().empty()) {
@@ -320,6 +329,7 @@ void Game::render() {
         raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2, cy - 73, 50, WHITE);
 
         if (GuiButton({static_cast<float>(cx - 80), static_cast<float>(cy - 5), 160.0f, 45.0f}, "RESUME")) {
+            PlaySound(clickSound_);
             state_ = GameState::Countdown;
             countdownTimer_ = 3.0f;
             // if (currentMusic_) ResumeMusicStream(*currentMusic_);
@@ -384,6 +394,7 @@ void Game::renderEndScreen() {
 
         Rectangle saveRect = {static_cast<float>(cx + 70), static_cast<float>(cy + 12), 90, 30};
         if (GuiButton(saveRect, "SAVE")) {
+            PlaySound(clickSound_);
             if (nameEditing_) nameEditing_ = false;
             if (nameInput_[0] == '\0') strcpy(nameInput_, "Player");
             scoreboard_.addScore(nameInput_, scoreboard_.getCurrentScore());
@@ -419,11 +430,13 @@ void Game::renderEndScreen() {
 
         if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 130), 180.0f, 45.0f}, "PLAY AGAIN")
             || IsKeyPressed(KEY_R)) {
+            PlaySound(clickSound_);
             shouldRestart_ = true;
         }
 
         if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 185), 180.0f, 45.0f}, "QUIT")
             || IsKeyPressed(KEY_ESCAPE)) {
+            PlaySound(clickSound_);
             running_ = false;
         }
 

@@ -29,6 +29,7 @@ int main() {
             game.renderEndScreen();
             if (game.shouldRestart()) {
                 game.resetForRestart();
+                
                 break;
             }
         }
