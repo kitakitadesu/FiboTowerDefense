@@ -18,9 +18,13 @@ build:windows:
     - cd build-windows
     - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain-mingw.cmake ..
     - make -j$(nproc)
+    # Package exe + assets as distributable zip
+    - cd ..
+    - apt-get install -y -qq zip
+    - zip -j FiboTowerDefense-windows.zip build-windows/FiboTowerDefense.exe assets/*
   artifacts:
     paths:
-      - build-windows/FiboTowerDefense.exe
+      - FiboTowerDefense-windows.zip
   cache:
     paths:
       - build-windows/_deps/
@@ -35,10 +39,12 @@ test:build_validation:
     - build:windows
   before_script:
     - apt-get update -qq
-    - apt-get install -y -qq file
+    - apt-get install -y -qq file unzip
   script:
-    - file build-windows/FiboTowerDefense.exe
-    - file build-windows/FiboTowerDefense.exe | grep -qi "PE32\|executable" || (echo "Not a Windows executable" && exit 1)
+    - unzip -o FiboTowerDefense-windows.zip -d test-exe
+    - file test-exe/FiboTowerDefense.exe
+    - file test-exe/FiboTowerDefense.exe | grep -qi "PE32\|executable" || (echo "Not a Windows executable" && exit 1)
+    - test -f test-exe/map_day_0.png || (echo "Missing asset: map_day_0.png" && exit 1)
   only:
     - merge_requests
     - main
