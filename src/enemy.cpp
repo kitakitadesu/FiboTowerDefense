@@ -98,10 +98,12 @@ void Enemy::draw(const raylib::Texture* tex) const {
     const float ratio = std::max(0.0f, hp_ / maxHp_);
     
     // Border/Background
-    DrawRectangleRounded({barX - 1, barY - 1, barW + 2, barH + 2}, 0.5f, 4, {20, 20, 20, 200});
+    DrawRectangle(static_cast<int>(barX - 1), static_cast<int>(barY - 1),
+                  static_cast<int>(barW + 2), static_cast<int>(barH + 2), {20, 20, 20, 200});
     // HP fill
     raylib::Color hpColor = (ratio > 0.5f) ? GREEN : ((ratio > 0.25f) ? ORANGE : RED);
-    DrawRectangleRounded({barX, barY, barW * ratio, barH}, 0.5f, 4, hpColor);
+    DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
+                  static_cast<int>(barW * ratio), static_cast<int>(barH), hpColor);
 }
 
 void Enemy::takeDamage(int dmg) {

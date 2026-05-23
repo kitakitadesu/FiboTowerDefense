@@ -268,9 +268,7 @@ void Level::renderUI() {
         const int kBarX       = (scrW - kBarW) / 2;
         const int kBarY       = scrH - kBarH - 10;
 
-        DrawRectangleRounded({static_cast<float>(kBarX), static_cast<float>(kBarY),
-                              static_cast<float>(kBarW), static_cast<float>(kBarH)},
-                             0.2f, 8, {0, 0, 0, 200});
+        DrawRectangle(kBarX, kBarY, kBarW, kBarH, {0, 0, 0, 200});
 
         // Button helper with active highlight
         auto buildBtn = [&](int idx, const char* label, BuildMode mode, bool affordable) {
@@ -412,8 +410,7 @@ clickHandled:
         if (py + 240 > scrH - 70) py = scrH - 70 - 240;
         const int pH = s(220);
 
-        DrawRectangleRounded({static_cast<float>(px), static_cast<float>(py),
-                              static_cast<float>(panelW), static_cast<float>(pH)}, 0.2f, 10, {20, 20, 20, 235});
+        DrawRectangle(px, py, panelW, pH, {20, 20, 20, 235});
 
         const char* tn = (selT.getTurretType() == TurretType::Shooting) ? "Shooting Turret" : "Melee Turret";
         std::string title = std::string(tn) + "  Lv." + std::to_string(selT.getLevel());
@@ -509,8 +506,7 @@ clickHandled:
         if (py + 210 > scrH - 70) py = scrH - 70 - 210;
         const int pH = s(190);
 
-        DrawRectangleRounded({static_cast<float>(px), static_cast<float>(py),
-                              static_cast<float>(panelW), static_cast<float>(pH)}, 0.2f, 10, {20, 20, 20, 235});
+        DrawRectangle(px, py, panelW, pH, {20, 20, 20, 235});
 
         std::string title = "Solar Cell  Lv." + std::to_string(selS.getLevel());
         const int tFs = s(17);
@@ -621,7 +617,7 @@ clickHandled:
                         default:                     ghostTint = {255, 255, 255, 80};  break;
                     }
                     Rectangle ghostRect = {cellPos.x - h, cellPos.y - h, s, s};
-                    DrawRectangleRoundedLinesEx(ghostRect, 0.2f, 6, 2.0f, ghostTint);
+                    DrawRectangleLinesEx(ghostRect, 2.0f, ghostTint);
                 }
             } else {
                 for (const auto& t : turrets_) {
@@ -644,8 +640,7 @@ clickHandled:
 
         const int pw = s(235);
         const int ph = margin * 2 + rowH * 4 + s(16);
-        DrawRectangleRounded({static_cast<float>(margin), static_cast<float>(margin),
-                              static_cast<float>(pw), static_cast<float>(ph)}, 0.2f, 10, {0, 0, 0, 180});
+        DrawRectangle(margin, margin, pw, ph, {0, 0, 0, 180});
 
         int y = margin + s(12);
 
@@ -681,8 +676,7 @@ clickHandled:
         std::string scoreStr = "\xE2\x98\x85  " + std::to_string(scoreboard_.getCurrentScore());
         const int scoreW = MeasureText(scoreStr.c_str(), fs) + s(30);
         const int scoreX = scrW - scoreW - margin;
-        DrawRectangleRounded({static_cast<float>(scoreX), static_cast<float>(margin),
-                              static_cast<float>(scoreW), static_cast<float>(fs + 30)}, 0.3f, 10, {0, 0, 0, 180});
+        DrawRectangle(scoreX, margin, scoreW, fs + 30, {0, 0, 0, 180});
         raylib::DrawText(scoreStr.c_str(), scoreX + 15, margin + 15, fs, SKYBLUE);
     }
 
@@ -695,9 +689,7 @@ clickHandled:
 
         // Dim background
         DrawRectangle(0, 0, scrW, scrH, {0, 0, 0, 120});
-        DrawRectangleRounded({static_cast<float>(dlgX), static_cast<float>(dlgY),
-                              static_cast<float>(dlgW), static_cast<float>(dlgH)},
-                             0.2f, 10, {20, 20, 20, 240});
+        DrawRectangle(dlgX, dlgY, dlgW, dlgH, {20, 20, 20, 240});
 
         char msg[48]; snprintf(msg, sizeof(msg), "Sell for %dg?", sellConfirmGold_);
         raylib::DrawText(msg, dlgX + dlgW/2 - MeasureText(msg, 20)/2, dlgY + 20, 20, WHITE);

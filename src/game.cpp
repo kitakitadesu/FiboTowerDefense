@@ -209,9 +209,7 @@ void Game::render() {
         const int btnY = 15;
         const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "II";
 
-        DrawRectangleRounded({static_cast<float>(btnX), static_cast<float>(btnY),
-                              static_cast<float>(btnS), static_cast<float>(btnS)},
-                             0.2f, 8, {0, 0, 0, 180});
+        DrawRectangle(btnX, btnY, btnS, btnS, {0, 0, 0, 180});
         raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
 
         if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
@@ -225,8 +223,7 @@ void Game::render() {
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
         DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangleRounded({static_cast<float>(cx - 150), static_cast<float>(cy - 90),
-                              300.0f, 180.0f}, 0.2f, 10, {20, 20, 20, 230});
+        DrawRectangle(cx - 150, cy - 90, 300, 180, {20, 20, 20, 230});
 
         const char* pauseMsg = "PAUSED";
         raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2 + 3, cy - 70, 50, BLACK);
@@ -246,8 +243,7 @@ void Game::renderEndScreen() {
     ClearBackground({20, 20, 20, 255});
 
     const int cx = GetScreenWidth() / 2, cy = GetScreenHeight() / 2;
-    DrawRectangleRounded({static_cast<float>(cx - 210), static_cast<float>(cy - 150),
-                          420.0f, 370.0f}, 0.2f, 10, {40, 40, 40, 255});
+    DrawRectangle(cx - 210, cy - 150, 420, 370, {40, 40, 40, 255});
 
     const bool isGameOver = (state_ == GameState::Lost);
     const char* msg = isGameOver ? "GAME OVER" : "VICTORY!";
