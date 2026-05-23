@@ -37,17 +37,17 @@
 | **R** | เริ่มใหม่ (บนจบเกม) |
 | **B,O,C,C,H,I** | เปิดโหมดโกง |
 
-## Play
+## เล่น
 
 - **Windows**: [ดาวน์โหลด](https://git.bocchichan.moe/bocchi/FiboTowerDefense/-/artifacts)
 - **Web**: [เล่นบนเบราว์เซอร์](https://fibotowerdefense-9feb08.p.bocchichan.moe/) (ประสิทธิภาพต่ำกว่า Windows)
 - **CI**: [GitLab CI](https://git.bocchichan.moe/bocchi/FiboTowerDefense)
 
-## Prerequisites
+## ความต้องการระบบ
 
 - CMake 3.11+
-- C++17 compiler (GCC, Clang, MSVC)
-- Git (for FetchContent to download dependencies)
+- คอมไพเลอร์ C++17 (GCC, Clang, MSVC)
+- Git (สำหรับ FetchContent ดาวน์โหลด dependencies)
 
 ### macOS
 ```bash
@@ -60,10 +60,10 @@ sudo apt-get install cmake build-essential
 ```
 
 ### Windows
-- Install [CMake](https://cmake.org/download/)
-- Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) or MinGW
+- ติดตั้ง [CMake](https://cmake.org/download/)
+- ติดตั้ง [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) หรือ MinGW
 
-## Build
+## วิธีคอมไพล์
 
 ### macOS / Linux
 ```bash
@@ -89,7 +89,7 @@ cmake .. -G "MinGW Makefiles"
 mingw32-make
 ```
 
-## Run
+## วิธีรัน
 
 ### macOS / Linux
 ```bash
@@ -101,46 +101,46 @@ mingw32-make
 .\Release\FiboTowerDefense.exe
 ```
 
-## Project Structure
+## โครงสร้างโปรเจกต์
 
 ```
 FiboTowerDefense/
-├── CMakeLists.txt          # Build configuration
-├── README.md               # This file
+├── CMakeLists.txt          # ตั้งค่าคอมไพล์
+├── README.md               # ไฟล์นี้
 ├── src/
-│   └── main.cpp            # Entry point
-├── include/                # Header files
-└── assets/                 # Game assets (sprites, sounds, etc.)
+│   └── main.cpp            # จุดเริ่มต้น
+├── include/                # ไฟล์หัว
+└── assets/                 # ทรัพยากรเกม (ภาพ, เสียง, ฯลฯ)
 ```
 
 ## Dependencies
 
-- **raylib** (v6.0) - Graphics & input library
-- **raylib-cpp** (v6.0.0) - C++ wrapper for raylib
+- **raylib** (v6.0) - ไลบรารีกราฟิกและอินพุต
+- **raylib-cpp** (v6.0.0) - C++ wrapper สำหรับ raylib
 
-Both are automatically fetched and built via CMake's FetchContent.
+ทั้งสองโหลดและคอมไพล์อัตโนมัติผ่าน CMake FetchContent
 
 ## CI/CD
 
-GitLab CI pipeline (`.gitlab-ci.yml`) automatically builds on push to `main`:
+GitLab CI (`.gitlab-ci.yml`) คอมไพล์อัตโนมัติเมื่อ push ไปที่ `main`:
 
-| Job | Platform | Artifact |
-|-----|----------|----------|
-| **build:windows** | MinGW-w64 cross-compile (Linux → Windows) | `.exe` + assets → `.zip` |
+| Job | แพลตฟอร์ม | ผลลัพธ์ |
+|-----|-----------|---------|
+| **build:windows** | MinGW-w64 ข้ามแพลตฟอร์ม (Linux → Windows) | `.exe` + assets → `.zip` |
 | **pages** | Emscripten (WebAssembly) | HTML5 build → GitLab Pages |
-| **test:build_validation** | PE32 check + asset verification | — |
+| **test:build_validation** | ตรวจสอบ PE32 + ตรวจสอบไฟล์ assets | — |
 
-**Windows**: Download the `.zip` artifact from the latest pipeline.
-**Web**: Play at [fibotowerdefense-9feb08.p.bocchichan.moe](https://fibotowerdefense-9feb08.p.bocchichan.moe/) (deployed on each `main` push).
+**Windows**: ดาวน์โหลด `.zip` artifact จาก pipeline ล่าสุด
+**Web**: เล่นที่ [fibotowerdefense-9feb08.p.bocchichan.moe](https://fibotowerdefense-9feb08.p.bocchichan.moe/) (อัปเดตทุกครั้งที่ push `main`)
 **CI**: [git.bocchichan.moe/bocchi/FiboTowerDefense](https://git.bocchichan.moe/bocchi/FiboTowerDefense)
 
-## Development
+## การพัฒนา
 
-### Adding Source Files
+### เพิ่มไฟล์ต้นฉบับ
 
-1. Create `.cpp` files in `src/`
-2. Create `.hpp` headers in `include/`
-3. Update `CMakeLists.txt` to include new sources:
+1. สร้างไฟล์ `.cpp` ใน `src/`
+2. สร้างไฟล์หัว `.hpp` ใน `include/`
+3. อัปเดต `CMakeLists.txt` เพื่อรวมไฟล์ใหม่:
    ```cmake
    add_executable(FiboTowerDefense
        src/main.cpp
@@ -149,19 +149,19 @@ GitLab CI pipeline (`.gitlab-ci.yml`) automatically builds on push to `main`:
    )
    ```
 
-### Compiler Warnings
+### คำเตือนคอมไพเลอร์
 
-Warnings are enabled by default. Treat warnings as errors during development:
+เปิดใช้งานคำเตือนโดยปริยาย ใช้ `-Werror` เพื่อถือคำเตือนเป็นข้อผิดพลาด:
 ```bash
 cmake .. -DCMAKE_CXX_FLAGS="-Werror"
 ```
 
-## Resources
+## แหล่งอ้างอิง
 
 - [raylib Documentation](https://www.raylib.com/)
 - [raylib-cpp GitHub](https://github.com/robloach/raylib-cpp)
 - [raylib Examples](https://github.com/raysan5/raylib/tree/master/examples)
 
-## License
+## ลิขสิทธิ์
 
-This project uses raylib (zlib/libpng license). See raylib repository for details.
+โปรเจกต์นี้ใช้ raylib (สัญญาอนุญาต zlib/libpng). ดูรายละเอียดในที่เก็บ raylib.
