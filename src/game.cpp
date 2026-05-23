@@ -122,7 +122,8 @@ void Game::resetForRestart() {
 void Game::update(float dt) {
     if (!running_) return;
 
-    if (currentMusic_ != nullptr) {
+    // ── update music stream only when playing or on menu ──
+    if (currentMusic_ != nullptr && (state_ == GameState::Playing || state_ == GameState::Menu)) {
         UpdateMusicStream(*currentMusic_);
     }
 
@@ -346,7 +347,7 @@ void Game::renderEndScreen() {
         }
     } else {
         // ── Normal panel with high scores + actions ──
-        DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
+        DrawRectangle(cx - 210, cy - 150, 420, 410, {25, 25, 35, 255});
 
         // Title
         raylib::DrawText(msg, cx - MeasureText(msg, 50) / 2 + 3, cy - 115, 50, BLACK);
@@ -356,9 +357,9 @@ void Game::renderEndScreen() {
         std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
         raylib::DrawText(scoreStr.c_str(), cx - MeasureText(scoreStr.c_str(), 26) / 2, cy - 45, 26, GOLD);
 
-        // ── High scores ──
+        // ── High scores (top 5 to avoid clipping into buttons) ──
         {
-            const auto top = scoreboard_.getTopScores(10);
+            const auto top = scoreboard_.getTopScores(5);
             int hsY = cy + 5;
             raylib::DrawText("HIGH SCORES", cx - MeasureText("HIGH SCORES", 16) / 2, hsY, 16, GRAY);
             hsY += 22;
@@ -371,18 +372,18 @@ void Game::renderEndScreen() {
             }
         }
 
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 85), 180.0f, 45.0f}, "PLAY AGAIN")
+        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 130), 180.0f, 45.0f}, "PLAY AGAIN")
             || IsKeyPressed(KEY_R)) {
             shouldRestart_ = true;
         }
 
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 140), 180.0f, 45.0f}, "QUIT")
+        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy + 185), 180.0f, 45.0f}, "QUIT")
             || IsKeyPressed(KEY_ESCAPE)) {
             running_ = false;
         }
 
         raylib::DrawText("R = Play Again  |  ESC = Quit",
-            cx - MeasureText("R = Play Again  |  ESC = Quit", 12) / 2, cy + 200, 12, {100, 100, 100, 180});
+            cx - MeasureText("R = Play Again  |  ESC = Quit", 12) / 2, cy + 245, 12, {100, 100, 100, 180});
     }
 
     EndDrawing();
