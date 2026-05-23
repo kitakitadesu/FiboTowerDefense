@@ -16,7 +16,7 @@ void Sprite::loadTexture() {
 void Sprite::draw(int x, int y) const {
     if (!loaded_) return;
     const Rectangle src{
-        static_cast<float>(frame_ * frameW_), 0.0f,
+        0.0f, 0.0f,
         static_cast<float>(frameW_),
         static_cast<float>(frameH_)
     };
@@ -54,19 +54,10 @@ void Sprite::drawFitted(int bx, int by, int bw, int bh) const {
     const float oy = static_cast<float>(by) + (static_cast<float>(bh) - sh) / 2.0f;
 
     const Rectangle src{
-        static_cast<float>(frame_ * frameW_), 0.0f,
+        0.0f, 0.0f,
         static_cast<float>(frameW_),
         static_cast<float>(frameH_)
     };
     const Rectangle dst{ox, oy, sw, sh};
     texture_.Draw(src, dst, {}, 0.0f, raylib::Color::White());
-}
-
-void Sprite::setFrameCount(int count) {
-    frameCount_ = count > 0 ? count : 1;
-    frame_ = 0;
-}
-
-void Sprite::setFrame(int frame) {
-    frame_ = (frame >= 0 && frame < frameCount_) ? frame : 0;
 }

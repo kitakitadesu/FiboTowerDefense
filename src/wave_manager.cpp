@@ -1,10 +1,11 @@
 #include "wave_manager.hpp"
-#include "board.hpp"
+#include "game_board.hpp"
 
 #include <algorithm>
-#include <cstdlib>  // std::rand
+#include <random>
 
-WaveManager::WaveManager(const Board& board) : board_(board) {}
+WaveManager::WaveManager(const GameBoard& board)
+    : id_(IdGenerator::getNextId()), board_(board) {}
 
 void WaveManager::addWave(const WaveDef& def) {
     waves_.push_back(def);
@@ -59,7 +60,9 @@ int WaveManager::getCurrentWaveEnemyCount() const {
 }
 
 int WaveManager::pickRow() const {
-    return std::rand() % board_.getRowCount();
+    static std::mt19937 rng(std::random_device{}());
+    static std::uniform_int_distribution<int> dist(0, board_.getRowCount() - 1);
+    return dist(rng);
 }
 
 // Called externally to advance to next wave or finish
@@ -67,10 +70,6 @@ void WaveManager::advanceWave() {
     ++currentWave_;
     spawned_ = 0;
     timer_   = 3.0f; // 3 second delay before next wave
-}
-
-void WaveManager::markWaiting(bool w) {
-    waiting_ = w;
 }
 
 // ── Infinite wave scaling (ramps from wave 5 / index 4 onward) ──

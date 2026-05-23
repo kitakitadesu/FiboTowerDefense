@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "board.hpp"
+#include "game_board.hpp"
 #include "id_generator.hpp"
 #include "identifier.hpp"
 #include "level.hpp"
@@ -44,9 +44,7 @@ public:
     bool shouldRestart() const { return shouldRestart_; }
     void resetForRestart();
 
-    Board&      getBoard()        { return board_; }
-    Level*      getCurrentLevel() { return currentLevel_.get(); }
-    Scoreboard& getScoreboard()   { return scoreboard_; }
+    GameBoard& getBoard() { return board_; }
 
 private:
     void rebuildWaypoints();
@@ -57,7 +55,7 @@ private:
     bool shouldRestart_ = false;
     GameState state_ = GameState::Menu;
 
-    Board board_;
+    GameBoard board_;
     Tower tower_;
     Scoreboard scoreboard_;
     std::unique_ptr<Level> currentLevel_;
@@ -67,13 +65,20 @@ private:
     int  cheatIdx_ = 0;
     std::vector<int> cheatSeq_;
 
-    Sprite gooseTex_;
+    // Entity sprites (day/night variants)
+    Sprite ur3eDay_{"assets/ur3e_day_64x64.png"};
+    Sprite ur3eNight_{"assets/ur3e_night_64x64.png"};
+    Sprite gooseDay_{"assets/goose_day_64x64.png"};
+    Sprite gooseNight_{"assets/goose_night_64x64.png"};
+    Sprite solarDay_{"assets/solar_day_64x64.png"};
+    Sprite solarNight_{"assets/solar_night_64x64.png"};
     Sprite menuImage_{"assets/GameMenu_edit2.png"};
     std::vector<std::vector<raylib::Vector2>> laneWps_;
 
     Texture2D nightMapTex_;
     bool isNight_ = false;
     float nightAlpha_ = 0.0f;
+    bool boardIsNight_ = false;
 
     Music menuMusic_;
     Music dayMusic_;

@@ -11,7 +11,7 @@ Turret::Turret(int col, int row, TurretType type, float range, float fireRate, i
     : id_(IdGenerator::getNextId()), col_(col), row_(row), type_(type),
       baseRange_(range), baseFireRate_(fireRate), baseDamage_(damage)
 {
-    if (type_ == TurretType::Shooting) {
+        if (type_ == TurretType::UR3e) {
         hp_ = 80.0f;
     } else {
         hp_ = 200.0f;
@@ -26,14 +26,14 @@ void Turret::takeDamage(float dmg) {
 void Turret::upgrade() {
     if (level_ >= kMaxLevel) return;
     ++level_;
-    const float hpGain = (type_ == TurretType::Shooting) ? 20.0f : 40.0f;
+    const float hpGain = (type_ == TurretType::UR3e) ? 20.0f : 40.0f;
     maxHp_ += hpGain;
     hp_ = maxHp_;
 }
 
 int Turret::getUpgradeCost() const {
     if (level_ >= kMaxLevel) return 0;
-    const int baseCost = (type_ == TurretType::Shooting) ? 100 : 80;
+    const int baseCost = (type_ == TurretType::UR3e) ? 100 : 80;
     return baseCost * level_;
 }
 
@@ -52,13 +52,13 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
 
         const float dx = e->getPosition().x - screenPos.x;
 
-        if (type_ == TurretType::Shooting) {
+    if (type_ == TurretType::UR3e) {
             // Unlimited rightward, limited leftward (blocking enemies at turret)
             if (dx < -kLeftTolerance) continue;
             const float dist = std::abs(dx);
             if (dist < nearest) { nearest = dist; target = e; }
         } else {
-            // Melee: symmetric range in both directions
+            // Goose: symmetric range in both directions
             const float dist = std::abs(dx);
             if (dist > effectiveRange) continue;
             if (dist < nearest) { nearest = dist; target = e; }
@@ -74,9 +74,10 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
     return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage());
 }
 
-void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
+void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH, bool isNight) const {
     if (hp_ <= 0.0f) return;
-    const float s = 50.0f;
+    // Fit sprite inside cell preserving aspect ratio, with 10% padding
+    const float s = std::min(cellW, cellH) * 0.85f;
     const float h = s / 2;
 
     if (tex) {
@@ -84,13 +85,15 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
                                    static_cast<float>(tex->height)};
         const Rectangle dst{screenPos.x - h, screenPos.y - h, s, s};
 
-        raylib::Color tint = (type_ == TurretType::Shooting)
-            ? raylib::Color::White()
-            : raylib::Color{255, 200, 100, 255};
+        tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
 
-        tex->Draw(src, dst, {}, 0.0f, tint);
+        // Goose blue glow overlay at night (smooth radial gradient)
+        if (isNight && type_ == TurretType::Goose) {
+            DrawCircleGradient(screenPos, s * 0.75f,
+                               {120, 200, 255, 102}, {120, 200, 255, 0});
+        }
     } else {
-        const raylib::Color c = (type_ == TurretType::Shooting) ? BLUE : ORANGE;
+        const raylib::Color c = (type_ == TurretType::UR3e) ? BLUE : ORANGE;
         DrawRectangle(static_cast<int>(screenPos.x - h),
                       static_cast<int>(screenPos.y - h),
                       static_cast<int>(s), static_cast<int>(s), c);

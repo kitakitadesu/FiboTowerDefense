@@ -7,12 +7,15 @@
 
 #include <raygui.h>
 
+namespace {
+    constexpr int kTowerMaxHp = 25;
+}
+
 Game::Game()
     : id_(IdGenerator::getNextId()),
-      board_("assets/map_day_0.png"),
+      board_(),
       tower_(25),
-      cheatSeq_{KEY_B, KEY_O, KEY_C, KEY_C, KEY_H, KEY_I},
-      gooseTex_("assets/goose_day_0.png")
+      cheatSeq_{KEY_B, KEY_O, KEY_C, KEY_C, KEY_H, KEY_I}
 {
     laneWps_.resize(board_.getRowCount());
     rebuildWaypoints();
@@ -64,7 +67,12 @@ void Game::handleCheatKey(int key) {
 
 void Game::init() {
     board_.loadTexture();
-    gooseTex_.loadTexture();
+    ur3eDay_.loadTexture();
+    ur3eNight_.loadTexture();
+    gooseDay_.loadTexture();
+    gooseNight_.loadTexture();
+    solarDay_.loadTexture();
+    solarNight_.loadTexture();
 
     nightMapTex_ = LoadTexture("assets/map1_night.png");
 
@@ -91,7 +99,7 @@ void Game::start() {
     rebuildWaypoints();
 
     // ── fresh Tower (reset HP) ──
-    tower_ = Tower(25);
+    tower_ = Tower(kTowerMaxHp);
 
     // ── create Level with 5 default waves ──
     auto level = std::make_unique<Level>(board_, tower_, scoreboard_);
@@ -171,7 +179,7 @@ void Game::update(float dt) {
     // --- cooldown ---
     if (state_ == GameState::Countdown) {
         if (currentLevel_) {
-            currentLevel_->update(0.0f, laneWps_); 
+            currentLevel_->update(0.0f, laneWps_, isNight_); 
         }
 
         countdownTimer_ -= dt; 
@@ -193,10 +201,9 @@ void Game::update(float dt) {
     }
 
     if (state_ == GameState::Playing && currentLevel_) {
-        currentLevel_->update(dt, laneWps_);
-
         int currentWave = currentLevel_->getWaveManager().getCurrentWave();
-        bool shouldBeNight = (currentWave / 10) % 2 == 1; 
+        bool shouldBeNight = (currentWave / 10) % 2 == 1;
+        currentLevel_->update(dt, laneWps_, shouldBeNight);
 
         if (shouldBeNight != isNight_) {
             isNight_ = shouldBeNight;
@@ -213,6 +220,15 @@ void Game::update(float dt) {
         } else if (nightAlpha_ > targetAlpha) {
             nightAlpha_ -= fadeSpeed * dt;
             if (nightAlpha_ < targetAlpha) nightAlpha_ = targetAlpha;
+        }
+
+        // Toggle board layers when alpha crosses 128 midpoint
+        if (!boardIsNight_ && nightAlpha_ >= 128.0f) {
+            board_.setNightMode(true);
+            boardIsNight_ = true;
+        } else if (boardIsNight_ && nightAlpha_ <= 128.0f && !isNight_) {
+            board_.setNightMode(false);
+            boardIsNight_ = false;
         }
 
         if (currentLevel_->isTowerDestroyed()) {
@@ -232,10 +248,14 @@ void Game::render() {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    const raylib::Texture* gooseRaw = &gooseTex_.getTexture();
+    // Pick day or night textures based on board night state
+    const bool night = boardIsNight_;
+    const raylib::Texture* ur3eTex  = &(night ? ur3eNight_ : ur3eDay_).getTexture();
+    const raylib::Texture* gooseTex = &(night ? gooseNight_ : gooseDay_).getTexture();
+    const raylib::Texture* solarTex = &(night ? solarNight_ : solarDay_).getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(gooseRaw, &nightMapTex_, nightAlpha_);
+        currentLevel_->render(ur3eTex, gooseTex, solarTex, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }
@@ -288,9 +308,6 @@ void Game::render() {
         if (hoverQuit && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         {
             PlaySound(clickSound_);
-            while (IsSoundPlaying(clickSound_)) {
-                WaitTime(0.01f); 
-            }
             running_ = false;
         }
     }
