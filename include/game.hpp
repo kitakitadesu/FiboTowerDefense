@@ -92,6 +92,8 @@ private:
     Sound gameOverSound_;
     bool  gameOverSoundPlayed_ = false;
     Sound towerHitSound_;
+    Sound enemyHitSound_;
+    Sound enemyDeathSound_;
     
 
     // Name input on end screen

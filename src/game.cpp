@@ -32,6 +32,8 @@ Game::~Game() {
     UnloadSound(countdownBeep_);
     UnloadSound(clickSound_);
     UnloadSound(gameOverSound_);
+    UnloadSound(enemyHitSound_);
+    UnloadSound(enemyDeathSound_);
 }
 
 void Game::switchMusic(Music* newMusic) {
@@ -86,6 +88,8 @@ void Game::init() {
     gameOverSound_ = LoadSound("assets/gameover.mp3");  
     clickSound_ = LoadSound("assets/toggle_002.ogg");
     towerHitSound_ = LoadSound("assets/punch.mp3");
+    enemyHitSound_ = LoadSound("assets/8-bit-explosion-95847.mp3");
+    enemyDeathSound_ = LoadSound("assets/roblox-death-sound_1.mp3");
 
     scoreboard_.load("scores.dat");
 
@@ -118,6 +122,8 @@ void Game::start() {
     addW(20, 0.8f, 170, 70.0f, 52);
     level->start();
     level->setTowerHitSound(&towerHitSound_);
+    level->setEnemyHitSound(&enemyHitSound_);
+    level->setEnemyDeathSound(&enemyDeathSound_);
     currentLevel_ = std::move(level);
 
     state_ = GameState::Playing;

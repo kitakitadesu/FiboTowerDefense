@@ -86,7 +86,10 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 static_cast<float>(cellR.x + cellR.w / 2),
                 static_cast<float>(cellR.y + cellR.h / 2));
             auto p = tur.update(dt, turretPos, enemyPtrs);
-            if (p) projectiles_.push_back(std::move(p));
+            if (p) {
+                if (enemyHitSound_) PlaySound(*enemyHitSound_);  // ← เพิ่ม
+                projectiles_.push_back(std::move(p));
+            }
         }
     }
 
@@ -175,6 +178,7 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
             currency_ += e->getReward();
             scoreboard_.addPoints(e->getReward());
             ++enemiesKilledThisWave_;
+            if (enemyDeathSound_) PlaySound(*enemyDeathSound_);
             floatingTexts_.push_back({
                 e->getPosition(),
                 "+" + std::to_string(e->getReward()),

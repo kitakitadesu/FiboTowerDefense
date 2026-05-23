@@ -163,7 +163,7 @@ This project uses raylib (zlib/libpng license). See raylib repository for detail
 
 # 🏰 FiboTowerDefense
 
-> เกม Tower Defense แนววางแผนป้องกันฐาน — สไตล์ Plants vs. Zombies
+> เกม Tower Defense แนววางแผน ป้องกันฐาน จากคลื่นศัตรูที่เดินจากขวาไปซ้าย
 
 | | |
 |---|---|
