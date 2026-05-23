@@ -43,7 +43,7 @@ void Level::start() {
     totalEnemiesThisWave_ = waveMgr_.getCurrentWaveEnemyCount();
 }
 
-void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& laneWps) {
+void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& laneWps, bool isNight) {
     // ── wave spawn ──
     {
         auto newEnemy = waveMgr_.update(dt);
@@ -81,9 +81,9 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
         }
     }
 
-    // ── solar cells → gold ──
+    // ── solar cells → gold (no energy at night) ──
     for (auto& sc : solarCells_) {
-        int earned = sc.update(dt);
+        int earned = sc.update(dt, isNight);
         if (earned > 0) {
             currency_ += earned;
             const auto cr = grid_.cellRect(sc.getCol(), sc.getRow());

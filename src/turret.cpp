@@ -84,11 +84,7 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
                                    static_cast<float>(tex->height)};
         const Rectangle dst{screenPos.x - h, screenPos.y - h, s, s};
 
-        raylib::Color tint = (type_ == TurretType::UR3e)
-            ? raylib::Color::White()
-            : raylib::Color{255, 200, 100, 255};
-
-        tex->Draw(src, dst, {}, 0.0f, tint);
+        tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
     } else {
         const raylib::Color c = (type_ == TurretType::UR3e) ? BLUE : ORANGE;
         DrawRectangle(static_cast<int>(screenPos.x - h),

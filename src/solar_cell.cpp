@@ -4,7 +4,8 @@
 
 SolarCell::SolarCell(int col, int row) : m_col(col), m_row(row) {}
 
-int SolarCell::update(float dt) {
+int SolarCell::update(float dt, bool isNight) {
+    if (isNight) return 0;
     m_timer += dt;
     const float interval = getInterval();
     if (m_timer >= interval) {
@@ -23,7 +24,7 @@ void SolarCell::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) cons
                             static_cast<float>(tex->width),
                             static_cast<float>(tex->height)};
         const Rectangle dst{screenPos.x - h, screenPos.y - h, s, s};
-        tex->Draw(src, dst, {}, 0.0f, raylib::Color{100, 255, 100, 255});
+        tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
     } else {
         DrawRectangle(static_cast<int>(screenPos.x - h),
                       static_cast<int>(screenPos.y - h),

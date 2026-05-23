@@ -179,7 +179,7 @@ void Game::update(float dt) {
     // --- cooldown ---
     if (state_ == GameState::Countdown) {
         if (currentLevel_) {
-            currentLevel_->update(0.0f, laneWps_); 
+            currentLevel_->update(0.0f, laneWps_, isNight_); 
         }
 
         countdownTimer_ -= dt; 
@@ -201,10 +201,9 @@ void Game::update(float dt) {
     }
 
     if (state_ == GameState::Playing && currentLevel_) {
-        currentLevel_->update(dt, laneWps_);
-
         int currentWave = currentLevel_->getWaveManager().getCurrentWave();
-        bool shouldBeNight = (currentWave / 10) % 2 == 1; 
+        bool shouldBeNight = (currentWave / 10) % 2 == 1;
+        currentLevel_->update(dt, laneWps_, shouldBeNight);
 
         if (shouldBeNight != isNight_) {
             isNight_ = shouldBeNight;
