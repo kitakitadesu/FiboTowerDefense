@@ -55,6 +55,7 @@ public:
 
     /// For win condition check (game.cpp).
     const std::vector<std::unique_ptr<Enemy>>& getEnemies() const { return enemies_; }
+    std::vector<std::unique_ptr<Enemy>>& getEnemiesMut() { return enemies_; }
 
     // --- queries ---
     bool isTowerDestroyed() const { return tower_.isDestroyed(); }

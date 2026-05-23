@@ -51,6 +51,17 @@ void Game::switchMusic(Music* newMusic) {
 void Game::rebuildWaypoints() {
     for (int r = 0; r < board_.getRowCount(); ++r)
         laneWps_[r] = buildLaneWaypoints(board_, r);
+    // Snap active enemies to current waypoint positions so they don't jump
+    if (currentLevel_) {
+        for (auto& e : currentLevel_->getEnemiesMut()) {
+            const int r = e->getRow();
+            const int idx = e->getWaypointIdx();
+            if (r >= 0 && r < static_cast<int>(laneWps_.size()) &&
+                idx > 0 && idx < static_cast<int>(laneWps_[r].size())) {
+                e->setPosition(laneWps_[r][idx]);
+            }
+        }
+    }
 }
 
 void Game::handleCheatKey(int key) {

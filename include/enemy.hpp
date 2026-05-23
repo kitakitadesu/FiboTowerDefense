@@ -39,6 +39,9 @@ public:
     }
 
     // -- getters --
+    int getWaypointIdx() const { return waypointIdx_; }
+    void setPosition(raylib::Vector2 p) { pos_ = p; }
+
     int     getRow()    const { return row_; }
     float   getHp()     const { return hp_; }
     float   getMaxHp()  const { return maxHp_; }
