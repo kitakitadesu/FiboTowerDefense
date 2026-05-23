@@ -101,12 +101,12 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     {
         // Row-bucketed lookup: O(T + S) build + O(E * avgPerRow) collision
         // vs O(E * T + E * S) naive nested loops
-        std::array<std::vector<Turret*>, kGridRows> turretsByRow;
+        std::vector<std::vector<Turret*>> turretsByRow(kGridRows);
         for (auto& t : turrets_)
             if (t.isAlive())
                 turretsByRow[t.getRow()].push_back(&t);
 
-        std::array<std::vector<SolarCell*>, kGridRows> solarByRow;
+        std::vector<std::vector<SolarCell*>> solarByRow(kGridRows);
         for (auto& sc : solarCells_)
             if (sc.isAlive())
                 solarByRow[sc.getRow()].push_back(&sc);
@@ -141,6 +141,15 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                         break;
                     }
                 }
+            }
+
+            // Check building hitboxes (predefined from layer alpha)
+            if (!blocked) {
+                const auto& hitboxes = grid_.getHitboxes();
+                const float s = grid_.getScale();
+                for (const auto& hb : hitboxes)
+                    if (hb.row == row && e->getPosition().x <= hb.x2 * s)
+                        { e->setEscaped(); break; }
             }
 
             if (!blocked)
