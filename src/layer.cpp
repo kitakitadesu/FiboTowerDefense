@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <dirent.h>
 #include <sys/stat.h>
 

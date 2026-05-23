@@ -1,9 +1,7 @@
 #include "level.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdlib>
 #include <string>
 
 #include <raygui.h>
