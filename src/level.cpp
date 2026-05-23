@@ -169,9 +169,29 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     }
     eraseIf(floatingTexts_, [](const auto& ft) { return ft.life <= 0.0f; });
 
+    // ── wave announcement timer ──
+    if (waveAnnounce_) {
+        waveAnnounce_->life -= dt;
+        if (waveAnnounce_->life <= 0.0f) waveAnnounce_.reset();
+    }
+
+    // ── sell confirm timer (auto-cancel after 5s) ──
+    sellConfirmTimer_ -= dt;
+    if (sellConfirmTimer_ <= 0.0f) { sellConfirmIdx_ = -1; }
+
     // ── wave progression ──
     if (waveMgr_.isWaveActive() && enemies_.empty()) {
         waveMgr_.advanceWave();
+        const int nextWave = waveMgr_.getCurrentWave() + 1;
+        const int totalWaves = waveMgr_.getWaveCount();
+
+        // Announce "Wave N!" (or "Final Wave!" on last wave)
+        if (nextWave == totalWaves) {
+            waveAnnounce_ = {"FINAL WAVE!", 3.0f, 3.0f};
+        } else {
+            waveAnnounce_ = {"Wave " + std::to_string(nextWave) + "!", 3.0f, 3.0f};
+        }
+
         enemiesKilledThisWave_ = 0;
         totalEnemiesThisWave_ = waveMgr_.getCurrentWaveEnemyCount();
         selectedTurretIdx_ = -1;
@@ -206,6 +226,25 @@ void Level::render(const raylib::Texture* gooseRaw) {
     // Projectiles
     for (const auto& p : projectiles_)
         p->draw();
+
+    // ── Enemy health bars ──
+    for (const auto& e : enemies_) {
+        if (e->getState() != Enemy::WALKING) continue;
+        const auto pos = e->getPosition();
+        const float hpPct = e->getHp() / e->getMaxHp();
+        const float barW = 36.0f;
+        const float barH = 4.0f;
+        const float barX = pos.x - barW / 2.0f;
+        const float barY = pos.y - 32.0f;
+
+        // Background
+        DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
+                      static_cast<int>(barW), static_cast<int>(barH), {40, 40, 40, 200});
+        // Fill
+        Color fill = (hpPct > 0.5f) ? GREEN : (hpPct > 0.25f) ? ORANGE : RED;
+        DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
+                      static_cast<int>(barW * hpPct), static_cast<int>(barH), fill);
+    }
 }
 
 void Level::renderUI() {
@@ -423,12 +462,12 @@ clickHandled:
             const int sRefund = (selT.getTurretType() == TurretType::Shooting) ? 50 * selT.getLevel() : 40 * selT.getLevel();
             snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
             if (GuiButton(sb, lbl)) {
-                currency_ += sRefund;
-                floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
-                    "+" + std::to_string(sRefund) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
-                turrets_.erase(turrets_.begin() + selectedTurretIdx_);
-                --turretsPlaced_;
-                selectedTurretIdx_ = -1;
+                sellConfirmIdx_ = selectedTurretIdx_;
+                sellConfirmIsTurret_ = true;
+                sellConfirmGold_ = sRefund;
+                sellConfirmTimer_ = 5.0f;
+                sellConfirmSelCol_ = selT.getCol();
+                sellConfirmSelRow_ = selT.getRow();
             }
         } else {
             raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", 16)/2, btnY + 6, 16, GOLD);
@@ -436,12 +475,12 @@ clickHandled:
             const int sRefund = (selT.getTurretType() == TurretType::Shooting) ? 50 * selT.getLevel() : 40 * selT.getLevel();
             char lbl[32]; snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
             if (GuiButton(sb, lbl)) {
-                currency_ += sRefund;
-                floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
-                    "+" + std::to_string(sRefund) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
-                turrets_.erase(turrets_.begin() + selectedTurretIdx_);
-                --turretsPlaced_;
-                selectedTurretIdx_ = -1;
+                sellConfirmIdx_ = selectedTurretIdx_;
+                sellConfirmIsTurret_ = true;
+                sellConfirmGold_ = sRefund;
+                sellConfirmTimer_ = 5.0f;
+                sellConfirmSelCol_ = selT.getCol();
+                sellConfirmSelRow_ = selT.getRow();
             }
         }
         // ── X close button (top-right corner) ──
@@ -509,12 +548,12 @@ clickHandled:
             const int sRefund = selS.getSellRefund();
             snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
             if (GuiButton(sb, lbl)) {
-                currency_ += sRefund;
-                floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
-                    "+" + std::to_string(sRefund) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
-                solarCells_.erase(solarCells_.begin() + selectedSolarIdx_);
-                --solarPlaced_;
-                selectedSolarIdx_ = -1;
+                sellConfirmIdx_ = selectedSolarIdx_;
+                sellConfirmIsTurret_ = false;
+                sellConfirmGold_ = sRefund;
+                sellConfirmTimer_ = 5.0f;
+                sellConfirmSelCol_ = selS.getCol();
+                sellConfirmSelRow_ = selS.getRow();
             }
         } else {
             raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", 16)/2, btnY + 6, 16, GOLD);
@@ -522,12 +561,12 @@ clickHandled:
             const int sRefund = selS.getSellRefund();
             char lbl[32]; snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
             if (GuiButton(sb, lbl)) {
-                currency_ += sRefund;
-                floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
-                    "+" + std::to_string(sRefund) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
-                solarCells_.erase(solarCells_.begin() + selectedSolarIdx_);
-                --solarPlaced_;
-                selectedSolarIdx_ = -1;
+                sellConfirmIdx_ = selectedSolarIdx_;
+                sellConfirmIsTurret_ = false;
+                sellConfirmGold_ = sRefund;
+                sellConfirmTimer_ = 5.0f;
+                sellConfirmSelCol_ = selS.getCol();
+                sellConfirmSelRow_ = selS.getRow();
             }
         }
         // ── X close button (top-right corner) ──
@@ -595,45 +634,124 @@ clickHandled:
         }
     }
 
-    // ── Stats panel ──
+    // ── Stats panel (top-left) ──
     {
-        const int fs = 24;
+        const int fs = 22;
+        const int sfs = 18;
         const int margin = 15;
-        const int rowH = fs + 8;
+        const int rowH = fs + 6;
 
-        const int pw = 220;
-        const int ph = margin * 2 + rowH * 3.5;
+        const int pw = 235;
+        const int ph = margin * 2 + rowH * 4 + 16;
         DrawRectangleRounded({static_cast<float>(margin), static_cast<float>(margin),
                               static_cast<float>(pw), static_cast<float>(ph)}, 0.2f, 10, {0, 0, 0, 180});
 
-        std::string livesStr = "Lives: " + std::to_string(tower_.getHp());
-        raylib::DrawText(livesStr.c_str(), margin + 15, margin + 15, fs, {255, 100, 100, 255});
+        int y = margin + 12;
 
-        std::string goldStr = "Gold: " + std::to_string(currency_);
-        raylib::DrawText(goldStr.c_str(), margin + 15, margin + 15 + rowH, fs, GOLD);
+        // Lives
+        std::string livesStr = "\xE2\x99\xA5  " + std::to_string(tower_.getHp()) + "/" + std::to_string(tower_.getMaxHp());
+        raylib::DrawText(livesStr.c_str(), margin + 14, y, fs, {255, 80, 80, 255});
+        y += rowH;
 
-        std::string waveStr = "Wave: " + std::to_string(waveMgr_.getCurrentWave() + 1)
+        // Gold
+        std::string goldStr = "$  " + std::to_string(currency_);
+        raylib::DrawText(goldStr.c_str(), margin + 14, y, fs, GOLD);
+        y += rowH;
+
+        // Wave
+        std::string waveStr = "\xE2\x9A\x94  Wave " + std::to_string(waveMgr_.getCurrentWave() + 1)
                             + "/" + std::to_string(waveMgr_.getWaveCount());
-        raylib::DrawText(waveStr.c_str(), margin + 15, margin + 15 + rowH * 2, 20, LIGHTGRAY);
-        const int barY = margin + 15 + rowH * 2 + 22;
+        raylib::DrawText(waveStr.c_str(), margin + 14, y, sfs, LIGHTGRAY);
+        const int barY = y + 22;
         const int barW = pw - 30;
-        const int barH = 8;
+        const int barH = 10;
         DrawRectangle(margin + 15, barY, barW, barH, {60, 60, 60, 200});
         if (totalEnemiesThisWave_ > 0) {
             float pct = std::min(1.0f, static_cast<float>(enemiesKilledThisWave_) / totalEnemiesThisWave_);
             DrawRectangle(margin + 15, barY, static_cast<int>(barW * pct), barH, SKYBLUE);
         }
+        y = barY + barH + 10;
 
-        std::string turretStr = "Turrets: " + std::to_string(turretsPlaced_) + "  Solar: " + std::to_string(solarPlaced_);
-        raylib::DrawText(turretStr.c_str(), margin + 15, margin + 15 + rowH * 3 - 4, 20, LIGHTGRAY);
+        // Structures
+        std::string turretStr = "\xE2\x9B\x94 " + std::to_string(turretsPlaced_) + "  \xE2\x98\x80 " + std::to_string(solarPlaced_);
+        raylib::DrawText(turretStr.c_str(), margin + 14, y, sfs, LIGHTGRAY);
 
-        // Score
-        std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
+        // Score (top-right)
+        std::string scoreStr = "\xE2\x98\x85  " + std::to_string(scoreboard_.getCurrentScore());
         const int scoreW = MeasureText(scoreStr.c_str(), fs) + 30;
         const int scoreX = scrW - scoreW - margin;
         DrawRectangleRounded({static_cast<float>(scoreX), static_cast<float>(margin),
                               static_cast<float>(scoreW), static_cast<float>(fs + 30)}, 0.3f, 10, {0, 0, 0, 180});
         raylib::DrawText(scoreStr.c_str(), scoreX + 15, margin + 15, fs, SKYBLUE);
+    }
+
+    // ── Sell confirmation dialog ──
+    if (sellConfirmIdx_ >= 0) {
+        const int scrW = GetScreenWidth();
+        const int scrH = GetScreenHeight();
+        const int dlgW = 300, dlgH = 140;
+        const int dlgX = (scrW - dlgW) / 2, dlgY = (scrH - dlgH) / 2;
+
+        // Dim background
+        DrawRectangle(0, 0, scrW, scrH, {0, 0, 0, 120});
+        DrawRectangleRounded({static_cast<float>(dlgX), static_cast<float>(dlgY),
+                              static_cast<float>(dlgW), static_cast<float>(dlgH)},
+                             0.2f, 10, {20, 20, 20, 240});
+
+        char msg[48]; snprintf(msg, sizeof(msg), "Sell for %dg?", sellConfirmGold_);
+        raylib::DrawText(msg, dlgX + dlgW/2 - MeasureText(msg, 20)/2, dlgY + 20, 20, WHITE);
+
+        // Yes button
+        if (GuiButton({static_cast<float>(dlgX + 25), static_cast<float>(dlgY + 70), 110.0f, 40.0f}, "YES")) {
+            // Execute sell
+            if (sellConfirmIsTurret_) {
+                for (size_t i = 0; i < turrets_.size(); ++i) {
+                    if (turrets_[i].getCol() == sellConfirmSelCol_ && turrets_[i].getRow() == sellConfirmSelRow_) {
+                        const auto sr = grid_.cellRect(turrets_[i].getCol(), turrets_[i].getRow());
+                        currency_ += sellConfirmGold_;
+                        floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
+                            "+" + std::to_string(sellConfirmGold_) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
+                        turrets_.erase(turrets_.begin() + static_cast<int>(i));
+                        --turretsPlaced_;
+                        break;
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < solarCells_.size(); ++i) {
+                    if (solarCells_[i].getCol() == sellConfirmSelCol_ && solarCells_[i].getRow() == sellConfirmSelRow_) {
+                        const auto sr = grid_.cellRect(solarCells_[i].getCol(), solarCells_[i].getRow());
+                        currency_ += sellConfirmGold_;
+                        floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
+                            "+" + std::to_string(sellConfirmGold_) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
+                        solarCells_.erase(solarCells_.begin() + static_cast<int>(i));
+                        --solarPlaced_;
+                        break;
+                    }
+                }
+            }
+            selectedTurretIdx_ = -1;
+            selectedSolarIdx_ = -1;
+            sellConfirmIdx_ = -1;
+        }
+        // No button
+        if (GuiButton({static_cast<float>(dlgX + 165), static_cast<float>(dlgY + 70), 110.0f, 40.0f}, "NO") ||
+            IsKeyPressed(KEY_ESCAPE)) {
+            sellConfirmIdx_ = -1;
+        }
+    }
+
+    // ── Wave announcement ──
+    if (waveAnnounce_) {
+        const float alpha = std::min(1.0f, waveAnnounce_->life / waveAnnounce_->maxLife * 2.0f);
+        const int fontSize = 60;
+        const int cx = GetScreenWidth() / 2;
+        const int cy = GetScreenHeight() / 3;
+        const Color c = {255, 255, 100, static_cast<unsigned char>(alpha * 200)};
+
+        raylib::DrawText(waveAnnounce_->text.c_str(),
+            cx - MeasureText(waveAnnounce_->text.c_str(), fontSize) / 2 + 3, cy + 3, fontSize, {0, 0, 0, c.a});
+        raylib::DrawText(waveAnnounce_->text.c_str(),
+            cx - MeasureText(waveAnnounce_->text.c_str(), fontSize) / 2, cy, fontSize, c);
     }
 
     // ── Floating texts ──

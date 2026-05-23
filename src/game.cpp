@@ -146,22 +146,58 @@ void Game::render() {
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
         DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangleRounded({static_cast<float>(cx - 210), static_cast<float>(cy - 160),
-                              420.0f, 320.0f}, 0.2f, 10, {20, 20, 20, 230});
+        DrawRectangleRounded({static_cast<float>(cx - 230), static_cast<float>(cy - 185),
+                              460.0f, 370.0f}, 0.2f, 10, {20, 20, 20, 230});
 
+        // Title with shadow
         const char* title = "FIBO TOWER DEFENSE";
-        raylib::DrawText(title, cx - MeasureText(title, 46) / 2 + 3, cy - 120, 46, BLACK);
-        raylib::DrawText(title, cx - MeasureText(title, 46) / 2, cy - 123, 46, SKYBLUE);
+        raylib::DrawText(title, cx - MeasureText(title, 42) / 2 + 3, cy - 150, 42, BLACK);
+        raylib::DrawText(title, cx - MeasureText(title, 42) / 2, cy - 153, 42, SKYBLUE);
 
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy - 20), 180.0f, 50.0f}, "PLAY")
+        // Subtitle
+        const char* sub = "Defend your tower.  Build.  Upgrade.  Survive.";
+        raylib::DrawText(sub, cx - MeasureText(sub, 14) / 2, cy - 100, 14, {200, 200, 200, 200});
+
+        // Play button
+        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy - 55), 180.0f, 50.0f}, "PLAY")
             || IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
             start();
         }
-        raylib::DrawText("ENTER / SPACE to start", cx - MeasureText("ENTER / SPACE to start", 16) / 2, cy + 50, 16, LIGHTGRAY);
-        raylib::DrawText("raylib / raygui", cx - MeasureText("raylib / raygui", 12) / 2, cy + 80, 12, {80, 80, 80, 180});
+        raylib::DrawText("ENTER / SPACE to start", cx - MeasureText("ENTER / SPACE to start", 14) / 2, cy + 15, 14, LIGHTGRAY);
+
+        // Controls reference
+        const int cfs = 13;
+        const int cY = cy + 45;
+        const char* ctrl1 = "[T] Shooting Turret  [M] Melee Turret  [S] Solar Cell";
+        const char* ctrl2 = "[P/Space/ESC] Pause  [RClick] Cancel build  [Click] Select";
+        const char* ctrl3 = "Block enemies by placing turrets in their lane";
+        raylib::DrawText(ctrl1, cx - MeasureText(ctrl1, cfs) / 2, cY, cfs, {180, 180, 180, 200});
+        raylib::DrawText(ctrl2, cx - MeasureText(ctrl2, cfs) / 2, cY + 18, cfs, {180, 180, 180, 200});
+        raylib::DrawText(ctrl3, cx - MeasureText(ctrl3, cfs) / 2, cY + 36, cfs, {140, 140, 140, 160});
+
+        // Credits
+        raylib::DrawText("raylib / raygui", cx - MeasureText("raylib / raygui", 11) / 2, cy + 120, 11, {80, 80, 80, 180});
     }
 
-    // ── Pause ──
+    // ── Pause button (always visible when playing/paused) ──
+    if (state_ == GameState::Playing || state_ == GameState::Paused) {
+        const int btnS = 36;
+        const int btnX = GetScreenWidth() - btnS - 15;
+        const int btnY = 15;
+        const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "\xE2\x96\xB6\xE2\x96\xB6";
+
+        DrawRectangleRounded({static_cast<float>(btnX), static_cast<float>(btnY),
+                              static_cast<float>(btnS), static_cast<float>(btnS)},
+                             0.2f, 8, {0, 0, 0, 180});
+        raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
+
+        if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
+                       static_cast<float>(btnS), static_cast<float>(btnS)}, "")) {
+            state_ = (state_ == GameState::Paused) ? GameState::Playing : GameState::Paused;
+        }
+    }
+
+    // ── Pause overlay ──
     if (state_ == GameState::Paused) {
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
