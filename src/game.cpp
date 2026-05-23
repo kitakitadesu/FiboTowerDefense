@@ -178,6 +178,11 @@ void Game::render() {
         Vector2 origin = { 0.0f, 0.0f };
         DrawTexturePro(menuImage, sourceRec, destRec, origin, 0.0f, WHITE);
 
+        float time = (float)GetTime();
+
+        unsigned char textAlpha = (unsigned char)((cos(time * 4.0f) + 1.0f) * 127.5f);
+        DrawText("WAITING FOR PLAYER...", 20, screenH - 40, 20, { 255, 255, 255, textAlpha });
+
         Rectangle startBtnBounds = { screenW / 2 - 130, screenH / 2 + 28, 253, 88 }; 
         Rectangle quitBtnBounds = { screenW / 2 - 130, screenH / 2 + 139, 253, 78 };  
 
