@@ -89,6 +89,9 @@ public:
     void removeTurret(int x, int y) { (void)x; (void)y; }
     void updateBossAttacks(float) {}
     void setTowerHitSound(Sound* s) { towerHitSound_ = s; }
+    void setEnemyHitSound(Sound* s) { enemyHitSound_ = s; }
+    void setEnemyDeathSound(Sound* s) { enemyDeathSound_ = s; }
+
 private:
 
     int id_;
@@ -118,7 +121,9 @@ private:
     bool cheatMode_ = false;
     bool paused_ = false;
     BuildMode placingMode_ = BuildMode::None;
-
+    
+    Sound* enemyDeathSound_ = nullptr;
+    Sound* enemyHitSound_ = nullptr;
     Sound* towerHitSound_ = nullptr;
     Sound sfxSelect_;
     Sound sfxPlace_;
