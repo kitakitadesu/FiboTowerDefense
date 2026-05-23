@@ -236,7 +236,7 @@ void Level::render(const raylib::Texture* gooseRaw, const Texture2D* nightMap, f
         DrawTexturePro(*nightMap, srcRec, destRec, {0.0f, 0.0f}, 0.0f, 
                        {255, 255, 255, static_cast<unsigned char>(nightAlpha)});
     }
-    
+
     // Tower base
     tower_.draw();
 
@@ -285,12 +285,14 @@ void Level::renderUI() {
     GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED,(int)ColorToInt(Color{255, 160, 40, 255}));
 
     // ── Build mode keyboard shortcuts ──
+    if (!paused_) {
     if (IsKeyPressed(KEY_T)) placingMode_ = BuildMode::ShootTurret;
     if (IsKeyPressed(KEY_M)) placingMode_ = BuildMode::MeleeTurret;
     if (IsKeyPressed(KEY_S)) placingMode_ = BuildMode::SolarCell;
+    }
 
     // ── ESC closes detail panels ──
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    if (!paused_ && IsKeyPressed(KEY_ESCAPE)) {
         if (selectedTurretIdx_ >= 0 || selectedSolarIdx_ >= 0) {
             selectedTurretIdx_ = -1;
             selectedSolarIdx_ = -1;
@@ -300,7 +302,7 @@ void Level::renderUI() {
     }
 
     // ── Right-click cancels build mode ──
-    if (placingMode_ != BuildMode::None && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+    if (!paused_ && placingMode_ != BuildMode::None && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         placingMode_ = BuildMode::None;
     }
 
@@ -357,7 +359,7 @@ void Level::renderUI() {
     } // end !paused_
 
     // ── Unified click handler: select existing or place new ──
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (!paused_ && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         // Skip grid handling when clicking on a visible detail panel
         {
             const raylib::Vector2 mp = GetMousePosition();
@@ -637,7 +639,7 @@ clickHandled:
 
     // ── Hover highlight & ghost (skip when detail panel open) ──
     const bool detailOpen = (selectedTurretIdx_ >= 0 || selectedSolarIdx_ >= 0);
-    if (!detailOpen) {
+    if (!detailOpen && !paused_) {
         const int hov = grid_.hoveredCell(GetMousePosition());
         grid_.drawHover(hov);
 
