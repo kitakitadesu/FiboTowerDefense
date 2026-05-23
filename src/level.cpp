@@ -192,14 +192,8 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     if (waveMgr_.isWaveActive() && enemies_.empty()) {
         waveMgr_.advanceWave();
         const int nextWave = waveMgr_.getCurrentWave() + 1;
-        const bool finalWave = (nextWave == waveMgr_.getWaveCount());
 
-        // Announce "Wave N!" (or "Final Wave!" on last predefined wave)
-        if (finalWave) {
-            waveAnnounce_ = {"FINAL WAVE!", 3.0f, 3.0f};
-        } else {
-            waveAnnounce_ = {"Wave " + std::to_string(nextWave) + "!", 3.0f, 3.0f};
-        }
+        waveAnnounce_ = {"Wave " + std::to_string(nextWave) + "!", 3.0f, 3.0f};
 
         enemiesKilledThisWave_ = 0;
         totalEnemiesThisWave_ = waveMgr_.getCurrentWaveEnemyCount();
