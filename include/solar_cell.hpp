@@ -42,7 +42,7 @@ public:
     bool  isMaxLevel()     const { return m_level >= kMaxLevel; }
     int   getUpgradeCost() const { return kCost * m_level; }
     int   getSellRefund()  const { return kCost * m_level / 2; }
-    void  upgrade()              { if (m_level < kMaxLevel) { ++m_level; health_.setMaxHp(60.0f + (m_level - 1) * 20.0f); health_.fill(); } }
+    void  upgrade()              { if (m_level < kMaxLevel) { ++m_level; health_.setMaxHp(20.0f + (m_level - 1) * 10.0f); health_.fill(); } }
 
     // --- level-dependent stats ---
     int   getReward()   const { return 6 + (m_level - 1) * 3; }   // 6, 9, 12, 15, 18
@@ -59,5 +59,5 @@ private:
     int    m_col, m_row;
     int    m_level = 1;
     float  m_timer = 0.0f;
-    Health health_{60.0f};
+    Health health_{20.0f};
 };
