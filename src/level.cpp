@@ -109,7 +109,7 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
         }
 
         if (!blocked) {
-            for (const auto& sc : solarCells_) {
+            for (auto& sc : solarCells_) {
                 if (sc.getRow() != e->getRow()) continue;
                 const auto cellR = grid_.cellRect(sc.getCol(), sc.getRow());
                 const float sx = static_cast<float>(cellR.x + cellR.w / 2);
@@ -117,6 +117,7 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 const float dx = sx - e->getPosition().x;
                 if (dx > 0 && dx < cellHalfW + e->getRadius()) {
                     blocked = true;
+                    sc.takeDamage(enemyDPS * dt);
                     break;
                 }
             }
@@ -162,6 +163,28 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                     "Turret Lost!", RED, 1.5f, 1.5f, {0.0f, -60.0f}
                 });
                 it = turrets_.erase(it);
+                // idx stays same — next element shifts down
+            } else {
+                ++it;
+                ++idx;
+            }
+        }
+    }
+
+    // ── cleanup destroyed solar cells ──
+    {
+        auto it = solarCells_.begin();
+        int idx = 0;
+        while (it != solarCells_.end()) {
+            if (!it->isAlive()) {
+                if (idx == selectedSolarIdx_) selectedSolarIdx_ = -1;
+                const auto cr = grid_.cellRect(it->getCol(), it->getRow());
+                floatingTexts_.push_back({
+                    {static_cast<float>(cr.x + cr.w / 2), static_cast<float>(cr.y)},
+                    "Solar Lost!", {255, 140, 20, 255}, 1.5f, 1.5f, {0.0f, -60.0f}
+                });
+                it = solarCells_.erase(it);
+                --solarPlaced_;
                 // idx stays same — next element shifts down
             } else {
                 ++it;
