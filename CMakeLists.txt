@@ -73,6 +73,11 @@ else()
     target_compile_options(FiboTowerDefense PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+# Static link MinGW runtime (no DLL dependencies on Windows)
+if(MINGW)
+    target_link_options(FiboTowerDefense PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+
 # ============================================================
 # Web (Emscripten) target
 # ============================================================
