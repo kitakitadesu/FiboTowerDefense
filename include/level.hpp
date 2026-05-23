@@ -105,6 +105,7 @@ public:
     // --- stubs for Phase 3+ ---
     void removeTurret(int x, int y) { (void)x; (void)y; }
     void updateBossAttacks(float) {}
+    void setTowerHitSound(Sound* s) { towerHitSound_ = s; }
 
 private:
     int id_;
@@ -135,9 +136,11 @@ private:
     bool paused_ = false;
     BuildMode placingMode_ = BuildMode::None;
 
+    Sound* towerHitSound_ = nullptr;
     Sound sfxSelect_;
     Sound sfxPlace_;
     Sound sfxError_;
+    
 
     // Wave announcement
     std::optional<WaveAnnouncement> waveAnnounce_;

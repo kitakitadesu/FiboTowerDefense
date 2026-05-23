@@ -143,9 +143,11 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
             });
             events_.trigger(EnemyKilledEvent{e->getPosition()});
         }
-        if (e->isEscaped()) {
-            if (!cheatMode_)
+        if (e->isEscaped()) {      
+            if (!cheatMode_) {
                 tower_.takeDamage(1);
+                if (towerHitSound_) PlaySound(*towerHitSound_);
+            }
         }
     }
     eraseIf(enemies_, [](const auto& e) { return e->isDead() || e->isEscaped(); });
