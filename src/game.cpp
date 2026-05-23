@@ -293,10 +293,6 @@ void Game::render() {
         const bool hoverQuit  = CheckCollisionPointRec(mousePos, quitBtnBounds);
         const bool pressEnter = IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE);
 
-        float time = (float)GetTime();
-        unsigned char textAlpha = (unsigned char)((cos(time * 4.0f) + 1.0f) * 127.5f);
-        DrawText("WAITING FOR PLAYER...", 20, screenH - 40, 20, { 255, 255, 255, textAlpha });
-
         // Start button visual feedback
         if (hoverStart || pressEnter) {
             const bool pressing = (pressEnter || IsMouseButtonDown(MOUSE_LEFT_BUTTON));
