@@ -17,7 +17,21 @@ Game::Game()
     rebuildWaypoints();
 }
 
-Game::~Game() = default;
+Game::~Game() {
+    UnloadMusicStream(menuMusic_);
+    UnloadMusicStream(dayMusic_);
+    // UnloadMusicStream(nightMusic_);
+}
+
+void Game::switchMusic(Music* newMusic) {
+    if (currentMusic_ != newMusic) {
+        if (currentMusic_ != nullptr) {
+            StopMusicStream(*currentMusic_);
+        }
+        currentMusic_ = newMusic;
+        PlayMusicStream(*currentMusic_);
+    }
+}
 
 void Game::rebuildWaypoints() {
     for (int r = 0; r < board_.getRowCount(); ++r)
@@ -40,9 +54,18 @@ void Game::handleCheatKey(int key) {
 void Game::init() {
     board_.loadTexture();
     gooseTex_.loadTexture();
+
+    menuMusic_ = LoadMusicStream("assets/dayMusic_Signal_at_the_Tower.mp3");
+    dayMusic_ = LoadMusicStream("assets/menuMusic_Clocktower_Circuit.mp3");
+    // nightMusic_ = LoadMusicStream("assets/bgm_night.mp3");
+
+    switchMusic(&menuMusic_);
 }
 
 void Game::start() {
+    // ถ้าอนาคตมีด่านกลางคืน ค่อยเขียน if เช็คตรงนี้
+    switchMusic(&dayMusic_);
+
     board_.updateScale(GetScreenWidth());
     rebuildWaypoints();
 
@@ -81,6 +104,10 @@ void Game::resetForRestart() {
 
 void Game::update(float dt) {
     if (!running_) return;
+
+    if (currentMusic_ != nullptr) {
+        UpdateMusicStream(*currentMusic_);
+    }
 
     // ── aspect-ratio lock ──
     if (IsWindowResized()) {
@@ -138,27 +165,87 @@ void Game::render() {
         raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, GREEN);
     }
 
-    // ── Menu ──
+   // ── Menu ──
     if (state_ == GameState::Menu) {
-        // Draw board behind the overlay
-        board_.draw();
+        static Texture2D menuImage = LoadTexture("assets/GameMenu_edit2.png");
 
-        const int w = GetScreenWidth(), h = GetScreenHeight();
-        const int cx = w / 2, cy = h / 2;
-        DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangleRounded({static_cast<float>(cx - 210), static_cast<float>(cy - 160),
-                              420.0f, 320.0f}, 0.2f, 10, {20, 20, 20, 230});
+        float screenW = (float)GetScreenWidth();
+        float screenH = (float)GetScreenHeight();
 
-        const char* title = "FIBO TOWER DEFENSE";
-        raylib::DrawText(title, cx - MeasureText(title, 46) / 2 + 3, cy - 120, 46, BLACK);
-        raylib::DrawText(title, cx - MeasureText(title, 46) / 2, cy - 123, 46, SKYBLUE);
+        // บีบภาพให้พอดีหน้าจอ
+        Rectangle sourceRec = { 0.0f, 0.0f, (float)menuImage.width, (float)menuImage.height };
+        Rectangle destRec = { 0.0f, 0.0f, screenW, screenH };
+        Vector2 origin = { 0.0f, 0.0f };
+        DrawTexturePro(menuImage, sourceRec, destRec, origin, 0.0f, WHITE);
 
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy - 20), 180.0f, 50.0f}, "PLAY")
-            || IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
+        Rectangle startBtnBounds = { screenW / 2 - 130, screenH / 2 + 28, 253, 88 }; 
+        Rectangle quitBtnBounds = { screenW / 2 - 130, screenH / 2 + 139, 253, 78 };  
+
+        Vector2 mousePos = GetMousePosition();
+
+        // --- 2. เช็คปุ่ม Start (เมาส์ชี้และกด) ---
+        if (CheckCollisionPointRec(mousePos, startBtnBounds)) {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                DrawRectangleRec(startBtnBounds, { 0, 0, 0, 80 }); 
+            } 
+            else {
+                DrawRectangleRec(startBtnBounds, { 209, 209, 209, 80 }); 
+            }
+
+            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+                start();
+            }
+        }
+
+        // --- เช็คปุ่ม Quit (เมาส์ชี้และกด) ---
+        if (CheckCollisionPointRec(mousePos, quitBtnBounds)) {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                DrawRectangleRec(quitBtnBounds, { 0, 0, 0, 80 }); 
+            } else {
+                DrawRectangleRec(quitBtnBounds, { 209, 209, 209, 80 });
+            }
+
+            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+                running_ = false;
+            }
+        }
+
+        // --- 2. เช็คปุ่ม Start (เมาส์ชี้, เมาส์คลิก และ คีย์บอร์ด) ---
+        bool isHoveringStart = CheckCollisionPointRec(mousePos, startBtnBounds);
+        bool isPressingKey = IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE);
+        bool isClickingStart = isHoveringStart && IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+
+        if (isClickingStart || isPressingKey) {
+            // ถ้ากำลังคลิกซ้ายค้าง หรือ กด Enter/Space ค้างไว้ -> ทับด้วยสีดำ
+            DrawRectangleRec(startBtnBounds, { 0, 0, 0, 80 }); 
+        } 
+        else if (isHoveringStart) {
+            // ถ้าแค่เอาเมาส์ชี้เฉยๆ -> ทับด้วยสีขาว
+            DrawRectangleRec(startBtnBounds, { 209, 209, 209, 80 }); 
+        }
+
+        // ตรวจสอบจังหวะ "ปล่อย" ปุ่ม (ปล่อยคลิกซ้าย หรือ ปล่อย Enter/Space) ค่อยเริ่มเกม
+        if ((isHoveringStart && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) || 
+            IsKeyReleased(KEY_ENTER) || IsKeyReleased(KEY_SPACE)) {
             start();
         }
-        raylib::DrawText("ENTER / SPACE to start", cx - MeasureText("ENTER / SPACE to start", 16) / 2, cy + 50, 16, LIGHTGRAY);
-        raylib::DrawText("raylib / raygui", cx - MeasureText("raylib / raygui", 12) / 2, cy + 80, 12, {80, 80, 80, 180});
+
+        // --- เช็คปุ่ม Quit (เมาส์ชี้และกด) ---
+        if (CheckCollisionPointRec(mousePos, quitBtnBounds)) {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                DrawRectangleRec(quitBtnBounds, { 0, 0, 0, 80 }); 
+            } else {
+                DrawRectangleRec(quitBtnBounds, { 209, 209, 209, 80 });
+            }
+
+            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+                running_ = false;
+            }
+        }
+
+        // --- เช็คกรอบสีแดง  ---
+        // DrawRectangleLinesEx(startBtnBounds, 2, RED);
+        // DrawRectangleLinesEx(quitBtnBounds, 2, RED);
     }
 
     // ── Pause ──
