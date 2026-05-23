@@ -28,6 +28,7 @@ Game::~Game() {
 
     UnloadTexture(nightMapTex_);
 
+    UnloadSound(towerHitSound_);
     UnloadSound(countdownBeep_);
     UnloadSound(clickSound_);
     UnloadSound(gameOverSound_);
@@ -84,6 +85,7 @@ void Game::init() {
     countdownBeep_ = LoadSound("assets/error_007.ogg");
     gameOverSound_ = LoadSound("assets/gameover.mp3");  
     clickSound_ = LoadSound("assets/toggle_002.ogg");
+    towerHitSound_ = LoadSound("assets/punch.mp3");
 
     scoreboard_.load("scores.dat");
 
@@ -115,6 +117,7 @@ void Game::start() {
     addW(15, 0.9f, 130, 65.0f, 47);
     addW(20, 0.8f, 170, 70.0f, 52);
     level->start();
+    level->setTowerHitSound(&towerHitSound_);
     currentLevel_ = std::move(level);
 
     state_ = GameState::Playing;

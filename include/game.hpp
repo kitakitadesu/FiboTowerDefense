@@ -91,6 +91,7 @@ private:
     int   lastCountdownNum_ = -1;
     Sound gameOverSound_;
     bool  gameOverSoundPlayed_ = false;
+    Sound towerHitSound_;
     
 
     // Name input on end screen
