@@ -31,6 +31,7 @@ public:
 
     void update(float dt, const std::vector<raylib::Vector2>& waypoints);
     void takeDamage(int dmg);
+    void setEscaped() { if (state_ == WALKING) state_ = ESCAPED; }
 
     void spawnAt(const raylib::Vector2& pos) {
         pos_ = pos;
