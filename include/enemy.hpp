@@ -10,10 +10,10 @@
 #include "idisplay_name.hpp"
 #include "isprite.hpp"
 
-class Board;
+class GameBoard;
 
-/// Build lane waypoints (screen coords) from right→left through grid cells.
-std::vector<raylib::Vector2> buildLaneWaypoints(const Board& board, int row);
+/// Build lane waypoints (screen coords) from right→left.
+std::vector<raylib::Vector2> buildLaneWaypoints(const GameBoard& board, int row);
 
 /// Lane-based enemy that walks from right to left along a row (PvZ-style).
 class Enemy : public IIdentifier, public IDisplayName, public ISprite {

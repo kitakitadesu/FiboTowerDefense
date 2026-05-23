@@ -7,7 +7,7 @@
 
 #include <raylib.h>
 
-#include "board.hpp"
+#include "game_board.hpp"
 #include "enemy.hpp"
 #include "id_generator.hpp"
 #include "identifier.hpp"
@@ -18,6 +18,7 @@
 #include "turret.hpp"
 #include "util.hpp"
 #include "wave_manager.hpp"
+#include "game_grid.hpp"
 
 /// Build mode for placing turrets/solar cells.
 enum class BuildMode { None, ShootTurret, MeleeTurret, SolarCell };
@@ -32,13 +33,13 @@ struct WaveAnnouncement {
 /// Container for all gameplay entities in one level.
 class Level : public IIdentifier {
 public:
-    Level(Board& grid, Tower& tower, Scoreboard& scoreboard);
+    Level(GameBoard& grid, Tower& tower, Scoreboard& scoreboard);
     ~Level();
 
     int getId() const override { return id_; }
 
     // --- core accessors ---
-    Board&       getGrid()       { return grid_; }
+    GameBoard&   getGrid()       { return grid_; }
     Tower&       getTower()             { return tower_; }
     const Tower& getTower()       const { return tower_; }
     Scoreboard&  getScoreboard()        { return scoreboard_; }
@@ -72,7 +73,7 @@ public:
 private:
 
     int id_;
-    Board& grid_;
+    GameBoard& grid_;
     Tower& tower_;
     Scoreboard& scoreboard_;
 
@@ -80,6 +81,8 @@ private:
     std::vector<std::unique_ptr<Enemy>> enemies_;
     std::vector<std::unique_ptr<Projectile>> projectiles_;
     std::vector<SolarCell> solarCells_;
+
+    PlacementGrid placements_{5, 9};
 
     int   currency_ = 300;
     WaveManager waveMgr_;

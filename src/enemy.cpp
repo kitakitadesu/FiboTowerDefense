@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <cmath>
 
-#include "board.hpp"
+#include "game_board.hpp"
 
 // ------------------------------------------------------------------
 // Static helper: build lane waypoints from a Board row
 // ------------------------------------------------------------------
-std::vector<raylib::Vector2> buildLaneWaypoints(const Board& board, int row) {
+std::vector<raylib::Vector2> buildLaneWaypoints(const GameBoard& board, int row) {
     std::vector<raylib::Vector2> wps;
 
     const float margin = 80.0f;

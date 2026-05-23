@@ -14,7 +14,7 @@ namespace {
     constexpr int    kGridRows        = 5;
 }
 
-Level::Level(Board& grid, Tower& tower, Scoreboard& scoreboard)
+Level::Level(GameBoard& grid, Tower& tower, Scoreboard& scoreboard)
     : id_(IdGenerator::getNextId()), grid_(grid), tower_(tower), scoreboard_(scoreboard),
       waveMgr_(grid)
 {
@@ -246,7 +246,7 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
 
 static void drawRow(int r, const raylib::Texture* g, const std::vector<Turret>& tur,
                     const std::vector<SolarCell>& sol, const std::vector<std::unique_ptr<Enemy>>& ene,
-                    const Board& b)
+                    const GameBoard& b)
 {
     for (auto& t : tur) if (t.getRow() == r) {
         auto cr = b.cellRect(t.getCol(), t.getRow());
@@ -429,18 +429,21 @@ void Level::renderUI() {
             const int col = hovered % grid_.getColCount();
             const int row = hovered / grid_.getColCount();
 
-            // Check if an entity exists at this cell
+            // Check if an entity exists at this cell (via PlacementGrid)
             int foundTurret = -1;
             int foundSolar  = -1;
-            for (int i = 0; i < static_cast<int>(turrets_.size()); ++i) {
-                if (turrets_[i].getCol() == col && turrets_[i].getRow() == row) {
-                    foundTurret = i; break;
+            if (placements_.isOccupied(row, col)) {
+                char occ = placements_.occupantType(row, col);
+                for (int i = 0; i < static_cast<int>(turrets_.size()); ++i) {
+                    if (turrets_[i].getCol() == col && turrets_[i].getRow() == row) {
+                        foundTurret = i; break;
+                    }
                 }
-            }
-            if (foundTurret < 0) {
-                for (int i = 0; i < static_cast<int>(solarCells_.size()); ++i) {
-                    if (solarCells_[i].getCol() == col && solarCells_[i].getRow() == row) {
-                        foundSolar = i; break;
+                if (foundTurret < 0 && occ == PlacementGrid::kSolar) {
+                    for (int i = 0; i < static_cast<int>(solarCells_.size()); ++i) {
+                        if (solarCells_[i].getCol() == col && solarCells_[i].getRow() == row) {
+                            foundSolar = i; break;
+                        }
                     }
                 }
             }
@@ -465,12 +468,16 @@ void Level::renderUI() {
                     currency_ -= cost;
                     PlaySound(sfxPlace_);
 
-                    if (placingMode_ == BuildMode::ShootTurret)
+                    if (placingMode_ == BuildMode::ShootTurret) {
                         addTurret(Turret(col, row, TurretType::Shooting, 0, 1.5f, 25));
-                    else if (placingMode_ == BuildMode::MeleeTurret)
+                        placements_.place(row, col, PlacementGrid::kTurret);
+                    } else if (placingMode_ == BuildMode::MeleeTurret) {
                         addTurret(Turret(col, row, TurretType::Melee, 120, 1.2f, 35));
-                    else if (placingMode_ == BuildMode::SolarCell)
+                        placements_.place(row, col, PlacementGrid::kTurret);
+                    } else if (placingMode_ == BuildMode::SolarCell) {
                         addSolarCell(SolarCell(col, row));
+                        placements_.place(row, col, PlacementGrid::kSolar);
+                    }
                 } else {
                     PlaySound(sfxError_);
 
@@ -798,6 +805,7 @@ clickHandled:
                         currency_ += sellConfirmGold_;
                         floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
                             "+" + std::to_string(sellConfirmGold_) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
+                        placements_.remove(sellConfirmSelRow_, sellConfirmSelCol_);
                         turrets_.erase(turrets_.begin() + static_cast<int>(i));
                         --turretsPlaced_;
                         break;
@@ -810,6 +818,7 @@ clickHandled:
                         currency_ += sellConfirmGold_;
                         floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
                             "+" + std::to_string(sellConfirmGold_) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
+                        placements_.remove(sellConfirmSelRow_, sellConfirmSelCol_);
                         solarCells_.erase(solarCells_.begin() + static_cast<int>(i));
                         --solarPlaced_;
                         break;

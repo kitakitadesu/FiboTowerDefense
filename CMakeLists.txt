@@ -39,9 +39,14 @@ FetchContent_MakeAvailable(entt)
 # Main executable
 add_executable(FiboTowerDefense
     src/main.cpp
-    src/board.cpp
+    src/Board/board.cpp
     src/enemy.cpp
+    src/game_board.cpp
+    src/game_grid.cpp
+    src/game.cpp
+    src/high_score_table.cpp
     src/layer.cpp
+    src/level.cpp
     src/projectile.cpp
     src/raygui_impl.cpp
     src/scoreboard.cpp
@@ -50,8 +55,6 @@ add_executable(FiboTowerDefense
     src/tower.cpp
     src/turret.cpp
     src/wave_manager.cpp
-    src/game.cpp
-    src/level.cpp
 )
 
 # Link libraries

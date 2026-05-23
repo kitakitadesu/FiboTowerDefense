@@ -1,10 +1,10 @@
 #include "wave_manager.hpp"
-#include "board.hpp"
+#include "game_board.hpp"
 
 #include <algorithm>
 #include <random>
 
-WaveManager::WaveManager(const Board& board)
+WaveManager::WaveManager(const GameBoard& board)
     : id_(IdGenerator::getNextId()), board_(board) {}
 
 void WaveManager::addWave(const WaveDef& def) {

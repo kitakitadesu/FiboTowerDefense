@@ -7,7 +7,7 @@
 #include "id_generator.hpp"
 #include "identifier.hpp"
 
-class Board;
+class GameBoard;
 
 /// Wave definition: what to spawn and how fast.
 struct WaveDef {
@@ -21,7 +21,7 @@ struct WaveDef {
 /// Manages wave progression and enemy spawning along lane rows.
 class WaveManager : public IIdentifier {
 public:
-    explicit WaveManager(const Board& board);
+    explicit WaveManager(const GameBoard& board);
 
     int  getId() const override { return id_; }
 
@@ -41,7 +41,7 @@ public:
 
 private:
     int id_;
-    const Board& board_;
+    const GameBoard& board_;
     std::vector<WaveDef> waves_;
     int  currentWave_ = 0;
     int  spawned_     = 0;
