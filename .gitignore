@@ -21,3 +21,11 @@ build-web/
 
 # CMake
 CMakeUserPresets.json
+
+# Scratch / work artifacts
+*.py
+*.patch
+.ctx/
+run.log
+*.png
+public/

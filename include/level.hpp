@@ -14,6 +14,7 @@
 #include "projectile.hpp"
 #include "scoreboard.hpp"
 #include "solar_cell.hpp"
+#include "spring_anim.hpp"
 #include "tower.hpp"
 #include "turret.hpp"
 #include "util.hpp"
@@ -140,4 +141,6 @@ private:
     float sellConfirmTimer_ = 0.0f;
     int sellConfirmSelCol_ = 0;
     int sellConfirmSelRow_ = 0;
+
+    SpringAnim detailOverlay_{400.0f, 27.0f};
 };

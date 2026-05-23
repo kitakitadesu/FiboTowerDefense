@@ -5,6 +5,7 @@
 #include <string>
 
 #include <raygui.h>
+#include <rlgl.h>  // for rlPushMatrix/rlTranslatef/rlScalef/rlPopMatrix
 
 Game::Game()
     : id_(IdGenerator::getNextId()),
@@ -15,6 +16,9 @@ Game::Game()
 {
     laneWps_.resize(board_.getRowCount());
     rebuildWaypoints();
+    menuOverlay_.snapTo(0.0f);
+    menuOverlay_.setTarget(1.0f);  // menu scales in on startup
+    menuTransitioning_ = false;
 }
 
 Game::~Game() = default;
@@ -102,11 +106,23 @@ void Game::update(float dt) {
         if (currentLevel_) currentLevel_->setCheatMode(cheatMode_);
     }
 
+    // ── menu spring + transition ──
+    if (state_ == GameState::Menu) {
+        menuOverlay_.update(dt);
+        if (menuTransitioning_ && menuOverlay_.isSettled(0.01f)) {
+            start();
+        }
+    }
+
     // ── pause toggle ──
     if ((state_ == GameState::Playing || state_ == GameState::Paused) &&
         (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE))) {
         state_ = (state_ == GameState::Playing) ? GameState::Paused : GameState::Playing;
     }
+
+    // ── pause overlay spring (scale from centroid) ──
+    pauseOverlay_.setTarget(state_ == GameState::Paused ? 1.0f : 0.0f);
+    pauseOverlay_.update(dt);
 
     if (state_ == GameState::Playing && currentLevel_) {
         currentLevel_->update(dt, laneWps_);
@@ -138,45 +154,89 @@ void Game::render() {
         raylib::DrawText("CHEAT ON", GetScreenWidth() - 120, GetScreenHeight() - 40, 20, GREEN);
     }
 
-    // ── Menu ──
+    // ── Menu (spring scale from centroid) ──
     if (state_ == GameState::Menu) {
-        // Draw board behind the overlay
+        // Board behind the overlay (always full size)
         board_.draw();
 
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
+
+        // Dim background (constant, full screen)
         DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangleRounded({static_cast<float>(cx - 230), static_cast<float>(cy - 185),
-                              460.0f, 370.0f}, 0.2f, 10, {20, 20, 20, 230});
 
-        // Title with shadow
-        const char* title = "FIBO TOWER DEFENSE";
-        raylib::DrawText(title, cx - MeasureText(title, 42) / 2 + 3, cy - 150, 42, BLACK);
-        raylib::DrawText(title, cx - MeasureText(title, 42) / 2, cy - 153, 42, SKYBLUE);
+        const float s = std::clamp(menuOverlay_.getValue(), 0.0f, 1.2f);
+        if (s > 0.001f) {
+            // ── Panel + content inside centroid-scale transform ──
+            rlPushMatrix();
+            rlTranslatef(static_cast<float>(cx), static_cast<float>(cy), 0.0f);
+            rlScalef(s, s, 1.0f);
+            rlTranslatef(static_cast<float>(-cx), static_cast<float>(-cy), 0.0f);
 
-        // Subtitle
-        const char* sub = "Defend your tower.  Build.  Upgrade.  Survive.";
-        raylib::DrawText(sub, cx - MeasureText(sub, 14) / 2, cy - 100, 14, {200, 200, 200, 200});
+            DrawRectangleRounded({static_cast<float>(cx - 230),
+                                  static_cast<float>(cy - 185),
+                                  460.0f, 370.0f},
+                                 0.2f, 10, {20, 20, 20, 230});
 
-        // Play button
-        if (GuiButton({static_cast<float>(cx - 90), static_cast<float>(cy - 55), 180.0f, 50.0f}, "PLAY")
-            || IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
-            start();
+            // Title with shadow
+            const char* title = "FIBO TOWER DEFENSE";
+            raylib::DrawText(title, cx - MeasureText(title, 42) / 2 + 3, cy - 150, 42, BLACK);
+            raylib::DrawText(title, cx - MeasureText(title, 42) / 2, cy - 153, 42, SKYBLUE);
+
+            // Subtitle
+            const char* sub = "Defend your tower.  Build.  Upgrade.  Survive.";
+            raylib::DrawText(sub, cx - MeasureText(sub, 14) / 2, cy - 100, 14, {200, 200, 200, 200});
+
+            // PLAY button (inside transform, manual click/key outside)
+            const float bL = static_cast<float>(cx - 90);
+            const float bT = static_cast<float>(cy - 55);
+            const float bW = 180.0f, bH = 50.0f;
+
+            DrawRectangleRounded({bL, bT, bW, bH}, 0.2f, 8,
+                Color{60, 100, 180, 230});
+            const char* btnText = "PLAY";
+            raylib::DrawText(btnText,
+                static_cast<int>(bL + bW / 2 - MeasureText(btnText, 22) / 2),
+                static_cast<int>(bT + bH / 2 - 11),
+                22, WHITE);
+
+            // Hint + controls text
+            raylib::DrawText("ENTER / SPACE to start",
+                cx - MeasureText("ENTER / SPACE to start", 14) / 2, cy + 15,
+                14, LIGHTGRAY);
+
+            const int cfs = 13;
+            const int cY = cy + 45;
+            const char* ctrl1 = "[T] Shooting Turret  [M] Melee Turret  [S] Solar Cell";
+            const char* ctrl2 = "[P/Space/ESC] Pause  [RClick] Cancel build  [Click] Select";
+            const char* ctrl3 = "Block enemies by placing turrets in their lane";
+            raylib::DrawText(ctrl1, cx - MeasureText(ctrl1, cfs) / 2, cY, cfs, {180, 180, 180, 200});
+            raylib::DrawText(ctrl2, cx - MeasureText(ctrl2, cfs) / 2, cY + 18, cfs, {180, 180, 180, 200});
+            raylib::DrawText(ctrl3, cx - MeasureText(ctrl3, cfs) / 2, cY + 36, cfs, {140, 140, 140, 160});
+
+            // Credits
+            raylib::DrawText("raylib / raygui",
+                cx - MeasureText("raylib / raygui", 11) / 2, cy + 120,
+                11, {80, 80, 80, 180});
+
+            rlPopMatrix();
+
+            // ── Hit / key detection (outside transform, gated by !menuTransitioning_) ──
+            const raylib::Vector2 mp = GetMousePosition();
+            const float scrX = (bL - cx) * s + cx;
+            const float scrY = (bT - cy) * s + cy;
+            const float scrW = bW * s, scrH = bH * s;
+            const bool hitPlay = mp.x >= scrX && mp.x < scrX + scrW
+                              && mp.y >= scrY && mp.y < scrY + scrH;
+
+            if (!menuTransitioning_) {
+                if ((hitPlay && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                    || IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
+                    menuTransitioning_ = true;
+                    menuOverlay_.setTarget(0.0f);
+                }
+            }
         }
-        raylib::DrawText("ENTER / SPACE to start", cx - MeasureText("ENTER / SPACE to start", 14) / 2, cy + 15, 14, LIGHTGRAY);
-
-        // Controls reference
-        const int cfs = 13;
-        const int cY = cy + 45;
-        const char* ctrl1 = "[T] Shooting Turret  [M] Melee Turret  [S] Solar Cell";
-        const char* ctrl2 = "[P/Space/ESC] Pause  [RClick] Cancel build  [Click] Select";
-        const char* ctrl3 = "Block enemies by placing turrets in their lane";
-        raylib::DrawText(ctrl1, cx - MeasureText(ctrl1, cfs) / 2, cY, cfs, {180, 180, 180, 200});
-        raylib::DrawText(ctrl2, cx - MeasureText(ctrl2, cfs) / 2, cY + 18, cfs, {180, 180, 180, 200});
-        raylib::DrawText(ctrl3, cx - MeasureText(ctrl3, cfs) / 2, cY + 36, cfs, {140, 140, 140, 160});
-
-        // Credits
-        raylib::DrawText("raylib / raygui", cx - MeasureText("raylib / raygui", 11) / 2, cy + 120, 11, {80, 80, 80, 180});
     }
 
     // ── Pause button (always visible when playing/paused) ──
@@ -197,22 +257,69 @@ void Game::render() {
         }
     }
 
-    // ── Pause overlay ──
-    if (state_ == GameState::Paused) {
-        const int w = GetScreenWidth(), h = GetScreenHeight();
-        const int cx = w / 2, cy = h / 2;
-        DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
-        DrawRectangleRounded({static_cast<float>(cx - 150), static_cast<float>(cy - 90),
-                              300.0f, 180.0f}, 0.2f, 10, {20, 20, 20, 230});
+    // ── Pause overlay (spring scale from centroid) ──
+    {
+        const float s = std::clamp(pauseOverlay_.getValue(), 0.0f, 1.2f);
+        if (s > 0.001f) {
+            const int w = GetScreenWidth(), h = GetScreenHeight();
+            const int cx = w / 2, cy = h / 2;
 
-        const char* pauseMsg = "PAUSED";
-        raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2 + 3, cy - 70, 50, BLACK);
-        raylib::DrawText(pauseMsg, cx - MeasureText(pauseMsg, 50) / 2, cy - 73, 50, WHITE);
+            // Dim background (constant, full screen)
+            DrawRectangle(0, 0, w, h, {0, 0, 0, 150});
 
-        if (GuiButton({static_cast<float>(cx - 80), static_cast<float>(cy - 5), 160.0f, 45.0f}, "RESUME")) {
-            state_ = GameState::Playing;
+            // ── Panel + content inside centroid-scale transform ──
+            rlPushMatrix();
+            rlTranslatef(static_cast<float>(cx), static_cast<float>(cy), 0.0f);
+            rlScalef(s, s, 1.0f);
+            rlTranslatef(static_cast<float>(-cx), static_cast<float>(-cy), 0.0f);
+
+            DrawRectangleRounded({static_cast<float>(cx - 150),
+                                  static_cast<float>(cy - 90),
+                                  300.0f, 180.0f},
+                                 0.2f, 10, {20, 20, 20, 230});
+
+            const char* pauseMsg = "PAUSED";
+            raylib::DrawText(pauseMsg,
+                cx - MeasureText(pauseMsg, 50) / 2 + 3, cy - 70,
+                50, BLACK);
+            raylib::DrawText(pauseMsg,
+                cx - MeasureText(pauseMsg, 50) / 2, cy - 73,
+                50, WHITE);
+
+            // RESUME button (inside transform, manual click outside)
+            const float bL = static_cast<float>(cx - 80);
+            const float bT = static_cast<float>(cy - 5);
+            const float bW = 160.0f, bH = 45.0f;
+
+            // Screen-space button bounds for hi-test
+            const float scrX = (bL - cx) * s + cx;
+            const float scrY = (bT - cy) * s + cy;
+            const float scrW = bW * s, scrH = bH * s;
+
+            const raylib::Vector2 mp = GetMousePosition();
+            const bool hover = mp.x >= scrX && mp.x < scrX + scrW
+                            && mp.y >= scrY && mp.y < scrY + scrH;
+
+            DrawRectangleRounded({bL, bT, bW, bH}, 0.2f, 8,
+                hover ? Color{60, 60, 60, 230} : Color{40, 40, 40, 230});
+
+            const char* btnText = "RESUME";
+            raylib::DrawText(btnText,
+                static_cast<int>(bL + bW / 2 - MeasureText(btnText, 20) / 2),
+                static_cast<int>(bT + bH / 2 - 10),
+                20, WHITE);
+
+            rlPopMatrix();
+
+            // Click detection (screen-space, outside transform)
+            if (hover && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                state_ = GameState::Playing;
+
+            // Bottom hint (outside transform, always normal size)
+            raylib::DrawText("P / SPACE to resume",
+                cx - MeasureText("P / SPACE to resume", 14) / 2, cy + 60,
+                14, {150, 150, 150, 200});
         }
-        raylib::DrawText("P / SPACE to resume", cx - MeasureText("P / SPACE to resume", 14) / 2, cy + 60, 14, {150, 150, 150, 200});
     }
 
     EndDrawing();

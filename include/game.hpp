@@ -8,6 +8,7 @@
 #include "identifier.hpp"
 #include "level.hpp"
 #include "scoreboard.hpp"
+#include "spring_anim.hpp"
 #include "sprite.hpp"
 #include "tower.hpp"
 
@@ -68,4 +69,8 @@ private:
 
     Sprite gooseTex_;
     std::vector<std::vector<raylib::Vector2>> laneWps_;
+
+    SpringAnim pauseOverlay_{400.0f, 27.0f};
+    SpringAnim menuOverlay_{400.0f, 27.0f};
+    bool menuTransitioning_ = false;
 };

@@ -6,6 +6,7 @@
 #include <string>
 
 #include <raygui.h>
+#include <rlgl.h>  // for rlPushMatrix/rlTranslatef/rlScalef/rlPopMatrix
 
 Level::Level(Board& grid, Tower& tower, Scoreboard& scoreboard)
     : id_(IdGenerator::getNextId()), grid_(grid), tower_(tower), scoreboard_(scoreboard),
@@ -179,6 +180,13 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     sellConfirmTimer_ -= dt;
     if (sellConfirmTimer_ <= 0.0f) { sellConfirmIdx_ = -1; }
 
+    // ── detail panel spring ──
+    {
+        const bool hasSelection = (selectedTurretIdx_ >= 0 || selectedSolarIdx_ >= 0);
+        detailOverlay_.setTarget(hasSelection ? 1.0f : 0.0f);
+        detailOverlay_.update(dt);
+    }
+
     // ── wave progression ──
     if (waveMgr_.isWaveActive() && enemies_.empty()) {
         waveMgr_.advanceWave();
@@ -227,24 +235,6 @@ void Level::render(const raylib::Texture* gooseRaw) {
     for (const auto& p : projectiles_)
         p->draw();
 
-    // ── Enemy health bars ──
-    for (const auto& e : enemies_) {
-        if (e->getState() != Enemy::WALKING) continue;
-        const auto pos = e->getPosition();
-        const float hpPct = e->getHp() / e->getMaxHp();
-        const float barW = 36.0f;
-        const float barH = 4.0f;
-        const float barX = pos.x - barW / 2.0f;
-        const float barY = pos.y - 32.0f;
-
-        // Background
-        DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
-                      static_cast<int>(barW), static_cast<int>(barH), {40, 40, 40, 200});
-        // Fill
-        Color fill = (hpPct > 0.5f) ? GREEN : (hpPct > 0.25f) ? ORANGE : RED;
-        DrawRectangle(static_cast<int>(barX), static_cast<int>(barY),
-                      static_cast<int>(barW * hpPct), static_cast<int>(barH), fill);
-    }
 }
 
 void Level::renderUI() {
@@ -401,182 +391,310 @@ void Level::renderUI() {
 clickHandled:
     ;
 
-    // ── Turret selected ──
-    if (selectedTurretIdx_ >= 0 && selectedTurretIdx_ < static_cast<int>(turrets_.size())) {
-        auto& selT = turrets_[selectedTurretIdx_];
-        const auto sr = grid_.cellRect(selT.getCol(), selT.getRow());
-        DrawRectangleLinesEx({static_cast<float>(sr.x), static_cast<float>(sr.y),
-                              static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, GOLD);
+    // ── Turret selected (spring scale from panel centroid) ──
+    {
+        const float detailS = std::clamp(detailOverlay_.getValue(), 0.0f, 1.2f);
+        const bool showDetail = (selectedTurretIdx_ >= 0 && selectedTurretIdx_ < static_cast<int>(turrets_.size()));
+        if (showDetail && detailS > 0.001f) {
+            auto& selT = turrets_[selectedTurretIdx_];
+            const auto sr = grid_.cellRect(selT.getCol(), selT.getRow());
+            DrawRectangleLinesEx({static_cast<float>(sr.x), static_cast<float>(sr.y),
+                                  static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, GOLD);
 
-        const int cx = scrW / 2;
-        int px = (sr.x < cx) ? sr.x + sr.w + 12 : sr.x - panelW - 12;
-        int py = sr.y;
-        if (px < 4) px = 4;
-        if (px + panelW > scrW - 4) px = scrW - panelW - 4;
-        if (py < 4) py = 4;
-        if (py + 240 > scrH - 70) py = scrH - 70 - 240;
-        const int pH = 220;
+            const int cx = scrW / 2;
+            int px = (sr.x < cx) ? sr.x + sr.w + 12 : sr.x - panelW - 12;
+            int py = sr.y;
+            if (px < 4) px = 4;
+            if (px + panelW > scrW - 4) px = scrW - panelW - 4;
+            if (py < 4) py = 4;
+            if (py + 240 > scrH - 70) py = scrH - 70 - 240;
+            const int pH = 220;
 
-        DrawRectangleRounded({static_cast<float>(px), static_cast<float>(py),
-                              static_cast<float>(panelW), static_cast<float>(pH)}, 0.2f, 10, {20, 20, 20, 235});
+            const float panelCx = px + panelW / 2.0f;
+            const float panelCy = py + pH / 2.0f;
+            const float srcCx = static_cast<float>(sr.x + sr.w / 2);
+            const float srcCy = static_cast<float>(sr.y + sr.h / 2);
+            // Interpolated center: turret → panel
+            const float tx = srcCx + (panelCx - srcCx) * detailS;
+            const float ty = srcCy + (panelCy - srcCy) * detailS;
+            const raylib::Vector2 mp = GetMousePosition();
 
-        const char* tn = (selT.getTurretType() == TurretType::Shooting) ? "Shooting Turret" : "Melee Turret";
-        std::string title = std::string(tn) + "  Lv." + std::to_string(selT.getLevel());
-        const int tFs = 17;
-        raylib::DrawText(title.c_str(), px + panelW/2 - MeasureText(title.c_str(), tFs)/2, py + 10, tFs, WHITE);
+            // ── Inside translate-from-turret + scale transform ──
+            rlPushMatrix();
+            rlTranslatef(tx, ty, 0.0f);
+            rlScalef(detailS, detailS, 1.0f);
+            rlTranslatef(-panelCx, -panelCy, 0.0f);
 
-        int rowY = py + 40;
-        const int lx = px + 14, vx = px + 105, ax = px + 173, nx = px + 195, rh = 21, sFs = 14;
-        char b1[16], b2[16];
-        auto drawStat = [&](const char* lbl, const char* cur, const char* nxt) {
-            raylib::DrawText(lbl, lx, rowY, sFs, LIGHTGRAY);
-            raylib::DrawText(cur, vx, rowY, sFs, WHITE);
-            if (nxt) { DrawText("\xE2\x86\x92", ax, rowY, sFs, GRAY); raylib::DrawText(nxt, nx, rowY, sFs, GREEN); }
-            rowY += rh;
-        };
+            DrawRectangleRounded({static_cast<float>(px), static_cast<float>(py),
+                                  static_cast<float>(panelW), static_cast<float>(pH)}, 0.2f, 10, {20, 20, 20, 235});
 
-        snprintf(b1, sizeof(b1), "%d", selT.getDamage());
-        if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%d", selT.getDamage() + 10); drawStat("Damage", b1, b2); }
-        else drawStat("Damage", b1, nullptr);
+            const char* tn = (selT.getTurretType() == TurretType::Shooting) ? "Shooting Turret" : "Melee Turret";
+            std::string title = std::string(tn) + "  Lv." + std::to_string(selT.getLevel());
+            const int tFs = 17;
+            raylib::DrawText(title.c_str(), px + panelW/2 - MeasureText(title.c_str(), tFs)/2, py + 10, tFs, WHITE);
 
-        snprintf(b1, sizeof(b1), "%.1f/s", selT.getFireRate());
-        if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.1f/s", selT.getFireRate() + 0.1f); drawStat("Fire Rate", b1, b2); }
-        else drawStat("Fire Rate", b1, nullptr);
+            int rowY = py + 40;
+            const int lx = px + 14, vx = px + 105, ax = px + 173, nx = px + 195, rh = 21, sFs = 14;
+            char b1[16], b2[16];
+            auto drawStat = [&](const char* lbl, const char* cur, const char* nxt) {
+                raylib::DrawText(lbl, lx, rowY, sFs, LIGHTGRAY);
+                raylib::DrawText(cur, vx, rowY, sFs, WHITE);
+                if (nxt) { DrawText("\xE2\x86\x92", ax, rowY, sFs, GRAY); raylib::DrawText(nxt, nx, rowY, sFs, GREEN); }
+                rowY += rh;
+            };
 
-        if (selT.getTurretType() == TurretType::Shooting) drawStat("Range", "\xE2\x88\x9E", nullptr);
-        else {
-            snprintf(b1, sizeof(b1), "%.0f", selT.getRange());
-            if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.0f", selT.getRange() + 20.0f); drawStat("Range", b1, b2); }
-            else drawStat("Range", b1, nullptr);
-        }
+            snprintf(b1, sizeof(b1), "%d", selT.getDamage());
+            if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%d", selT.getDamage() + 10); drawStat("Damage", b1, b2); }
+            else drawStat("Damage", b1, nullptr);
 
-        const int btnY = rowY + 6;
-        if (!selT.isMaxLevel()) {
-            const int cost = selT.getUpgradeCost();
-            Rectangle ub{static_cast<float>(px + 14), static_cast<float>(btnY), 242.0f, 30.0f};
-            char lbl[32]; snprintf(lbl, sizeof(lbl), "UPGRADE  (%dg)", cost);
-            if (currency_ < cost) GuiSetState(STATE_DISABLED);
-            if (GuiButton(ub, lbl) && currency_ >= cost) { currency_ -= cost; turrets_[selectedTurretIdx_].upgrade(); }
-            GuiSetState(STATE_NORMAL);
-            Rectangle sb{static_cast<float>(px + 14), static_cast<float>(btnY + 35), 242.0f, 30.0f};
-            const int sRefund = (selT.getTurretType() == TurretType::Shooting) ? 50 * selT.getLevel() : 40 * selT.getLevel();
-            snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
-            if (GuiButton(sb, lbl)) {
-                sellConfirmIdx_ = selectedTurretIdx_;
-                sellConfirmIsTurret_ = true;
-                sellConfirmGold_ = sRefund;
-                sellConfirmTimer_ = 5.0f;
-                sellConfirmSelCol_ = selT.getCol();
-                sellConfirmSelRow_ = selT.getRow();
+            snprintf(b1, sizeof(b1), "%.1f/s", selT.getFireRate());
+            if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.1f/s", selT.getFireRate() + 0.1f); drawStat("Fire Rate", b1, b2); }
+            else drawStat("Fire Rate", b1, nullptr);
+
+            if (selT.getTurretType() == TurretType::Shooting) drawStat("Range", "\xE2\x88\x9E", nullptr);
+            else {
+                snprintf(b1, sizeof(b1), "%.0f", selT.getRange());
+                if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.0f", selT.getRange() + 20.0f); drawStat("Range", b1, b2); }
+                else drawStat("Range", b1, nullptr);
             }
-        } else {
-            raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", 16)/2, btnY + 6, 16, GOLD);
-            Rectangle sb{static_cast<float>(px + 14), static_cast<float>(btnY + 30), 242.0f, 30.0f};
+
+            // ── Buttons: draw inside transform, click detection outside ──
+            const int btnY = rowY + 6;
             const int sRefund = (selT.getTurretType() == TurretType::Shooting) ? 50 * selT.getLevel() : 40 * selT.getLevel();
-            char lbl[32]; snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
-            if (GuiButton(sb, lbl)) {
-                sellConfirmIdx_ = selectedTurretIdx_;
-                sellConfirmIsTurret_ = true;
-                sellConfirmGold_ = sRefund;
-                sellConfirmTimer_ = 5.0f;
-                sellConfirmSelCol_ = selT.getCol();
-                sellConfirmSelRow_ = selT.getRow();
-            }
-        }
-        // ── X close button (top-right corner) ──
-        {
-            constexpr int kBtnS = 24;
-            const int xBtnX = px + panelW - kBtnS - 6;
-            const int xBtnY = py + 5;
-            if (GuiButton({static_cast<float>(xBtnX), static_cast<float>(xBtnY),
-                           static_cast<float>(kBtnS), static_cast<float>(kBtnS)}, "X")) {
-                selectedTurretIdx_ = -1;
+
+            // Helper: compute screen-space rect (accounts for translate-from-turret)
+            auto scrRect = [&](float l, float t, float w, float h) -> raylib::Rectangle {
+                return {
+                    (l - panelCx) * detailS + tx,
+                    (t - panelCy) * detailS + ty,
+                    w * detailS,
+                    h * detailS
+                };
+            };
+            auto isHover = [&](const raylib::Rectangle& r) -> bool {
+                return mp.x >= r.x && mp.x < r.x + r.width
+                    && mp.y >= r.y && mp.y < r.y + r.height;
+            };
+            auto drawBtn = [&](float l, float t, float w, float h, const char* text, float fs, Color normal, Color hoverC, bool disabled) {
+                const auto sr2 = scrRect(l, t, w, h);
+                const bool hov = !disabled && isHover(sr2);
+                DrawRectangleRounded({l, t, w, h}, 0.2f, 8, disabled ? Color{30, 30, 30, 180} : (hov ? hoverC : normal));
+                raylib::DrawText(text,
+                    static_cast<int>(l + w/2 - MeasureText(text, static_cast<int>(fs))/2),
+                    static_cast<int>(t + h/2 - fs/2),
+                    static_cast<int>(fs), disabled ? GRAY : WHITE);
+                return hov;
+            };
+
+            if (!selT.isMaxLevel()) {
+                const int cost = selT.getUpgradeCost();
+                char lbl[32]; snprintf(lbl, sizeof(lbl), "UPGRADE  (%dg)", cost);
+                const bool canAfford = (currency_ >= cost);
+                const bool upHov = drawBtn(px + 14, btnY, 242.0f, 30.0f, lbl, 14,
+                    Color{40, 80, 160, 230}, Color{60, 120, 220, 230}, !canAfford);
+
+                char sLbl[32]; snprintf(sLbl, sizeof(sLbl), "SELL  (%dg)", sRefund);
+                const bool sellHov = drawBtn(px + 14, btnY + 35, 242.0f, 30.0f, sLbl, 14,
+                    Color{40, 40, 40, 230}, Color{60, 60, 60, 230}, false);
+
+                // ── X close button ──
+                constexpr int kBtnS = 24;
+                const int xBtnX = px + panelW - kBtnS - 6;
+                const int xBtnY2 = py + 5;
+                const bool xHov = drawBtn(xBtnX, xBtnY2, kBtnS, kBtnS, "X", 14,
+                    Color{60, 30, 30, 230}, Color{100, 40, 40, 230}, false);
+
+                rlPopMatrix();
+
+                // ── Click detection (outside transform, screen-space) ──
+                if (upHov && canAfford && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    currency_ -= cost;
+                    turrets_[selectedTurretIdx_].upgrade();
+                }
+                if (sellHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    sellConfirmIdx_ = selectedTurretIdx_;
+                    sellConfirmIsTurret_ = true;
+                    sellConfirmGold_ = sRefund;
+                    sellConfirmTimer_ = 5.0f;
+                    sellConfirmSelCol_ = selT.getCol();
+                    sellConfirmSelRow_ = selT.getRow();
+                }
+                if (xHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    selectedTurretIdx_ = -1;
+                }
+            } else {
+                raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", 16)/2, btnY + 6, 16, GOLD);
+                char sLbl[32]; snprintf(sLbl, sizeof(sLbl), "SELL  (%dg)", sRefund);
+                const bool sellHov = drawBtn(px + 14, btnY + 30, 242.0f, 30.0f, sLbl, 14,
+                    Color{40, 40, 40, 230}, Color{60, 60, 60, 230}, false);
+
+                // ── X close button ──
+                constexpr int kBtnS = 24;
+                const int xBtnX = px + panelW - kBtnS - 6;
+                const int xBtnY2 = py + 5;
+                const bool xHov = drawBtn(xBtnX, xBtnY2, kBtnS, kBtnS, "X", 14,
+                    Color{60, 30, 30, 230}, Color{100, 40, 40, 230}, false);
+
+                rlPopMatrix();
+
+                if (sellHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    sellConfirmIdx_ = selectedTurretIdx_;
+                    sellConfirmIsTurret_ = true;
+                    sellConfirmGold_ = sRefund;
+                    sellConfirmTimer_ = 5.0f;
+                    sellConfirmSelCol_ = selT.getCol();
+                    sellConfirmSelRow_ = selT.getRow();
+                }
+                if (xHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    selectedTurretIdx_ = -1;
+                }
             }
         }
     }
 
-    // ── Solar cell selected ──
-    if (selectedSolarIdx_ >= 0 && selectedSolarIdx_ < static_cast<int>(solarCells_.size())) {
-        auto& selS = solarCells_[selectedSolarIdx_];
-        const auto sr = grid_.cellRect(selS.getCol(), selS.getRow());
-        DrawRectangleLinesEx({static_cast<float>(sr.x), static_cast<float>(sr.y),
-                              static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, GOLD);
+    // ── Solar cell selected (spring scale from panel centroid) ──
+    {
+        const float detailS = std::clamp(detailOverlay_.getValue(), 0.0f, 1.2f);
+        const bool showDetail = (selectedSolarIdx_ >= 0 && selectedSolarIdx_ < static_cast<int>(solarCells_.size()));
+        if (showDetail && detailS > 0.001f) {
+            auto& selS = solarCells_[selectedSolarIdx_];
+            const auto sr = grid_.cellRect(selS.getCol(), selS.getRow());
+            DrawRectangleLinesEx({static_cast<float>(sr.x), static_cast<float>(sr.y),
+                                  static_cast<float>(sr.w), static_cast<float>(sr.h)}, 3, GOLD);
 
-        const int cx = scrW / 2;
-        int px = (sr.x < cx) ? sr.x + sr.w + 12 : sr.x - panelW - 12;
-        int py = sr.y;
-        if (px < 4) px = 4;
-        if (px + panelW > scrW - 4) px = scrW - panelW - 4;
-        if (py < 4) py = 4;
-        if (py + 210 > scrH - 70) py = scrH - 70 - 210;
-        const int pH = 190;
+            const int cx = scrW / 2;
+            int px = (sr.x < cx) ? sr.x + sr.w + 12 : sr.x - panelW - 12;
+            int py = sr.y;
+            if (px < 4) px = 4;
+            if (px + panelW > scrW - 4) px = scrW - panelW - 4;
+            if (py < 4) py = 4;
+            if (py + 210 > scrH - 70) py = scrH - 70 - 210;
+            const int pH = 190;
 
-        DrawRectangleRounded({static_cast<float>(px), static_cast<float>(py),
-                              static_cast<float>(panelW), static_cast<float>(pH)}, 0.2f, 10, {20, 20, 20, 235});
+            const float panelCx = px + panelW / 2.0f;
+            const float panelCy = py + pH / 2.0f;
+            const float srcCx = static_cast<float>(sr.x + sr.w / 2);
+            const float srcCy = static_cast<float>(sr.y + sr.h / 2);
+            const float tx = srcCx + (panelCx - srcCx) * detailS;
+            const float ty = srcCy + (panelCy - srcCy) * detailS;
+            const raylib::Vector2 mp = GetMousePosition();
 
-        std::string title = "Solar Cell  Lv." + std::to_string(selS.getLevel());
-        const int tFs = 17;
-        raylib::DrawText(title.c_str(), px + panelW/2 - MeasureText(title.c_str(), tFs)/2, py + 10, tFs, WHITE);
+            // ── Inside translate-from-cell + scale transform ──
+            rlPushMatrix();
+            rlTranslatef(tx, ty, 0.0f);
+            rlScalef(detailS, detailS, 1.0f);
+            rlTranslatef(-panelCx, -panelCy, 0.0f);
 
-        int rowY = py + 40;
-        const int lx = px + 14, vx = px + 105, ax = px + 173, nx = px + 195, rh = 21, sFs = 14;
-        char b1[16], b2[16];
-        auto drawStat = [&](const char* lbl, const char* cur, const char* nxt) {
-            raylib::DrawText(lbl, lx, rowY, sFs, LIGHTGRAY);
-            raylib::DrawText(cur, vx, rowY, sFs, WHITE);
-            if (nxt) { DrawText("\xE2\x86\x92", ax, rowY, sFs, GRAY); raylib::DrawText(nxt, nx, rowY, sFs, GREEN); }
-            rowY += rh;
-        };
+            DrawRectangleRounded({static_cast<float>(px), static_cast<float>(py),
+                                  static_cast<float>(panelW), static_cast<float>(pH)}, 0.2f, 10, {20, 20, 20, 235});
 
-        snprintf(b1, sizeof(b1), "%dg", selS.getReward());
-        if (!selS.isMaxLevel()) { snprintf(b2, sizeof(b2), "%dg", selS.getReward() + 3); drawStat("Reward", b1, b2); }
-        else drawStat("Reward", b1, nullptr);
+            std::string title = "Solar Cell  Lv." + std::to_string(selS.getLevel());
+            const int tFs = 17;
+            raylib::DrawText(title.c_str(), px + panelW/2 - MeasureText(title.c_str(), tFs)/2, py + 10, tFs, WHITE);
 
-        snprintf(b1, sizeof(b1), "%.1fs", selS.getInterval());
-        if (!selS.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.1fs", selS.getInterval() - 0.2f); drawStat("Interval", b1, b2); }
-        else drawStat("Interval", b1, nullptr);
+            int rowY = py + 40;
+            const int lx = px + 14, vx = px + 105, ax = px + 173, nx = px + 195, rh = 21, sFs = 14;
+            char b1[16], b2[16];
+            auto drawStat = [&](const char* lbl, const char* cur, const char* nxt) {
+                raylib::DrawText(lbl, lx, rowY, sFs, LIGHTGRAY);
+                raylib::DrawText(cur, vx, rowY, sFs, WHITE);
+                if (nxt) { DrawText("\xE2\x86\x92", ax, rowY, sFs, GRAY); raylib::DrawText(nxt, nx, rowY, sFs, GREEN); }
+                rowY += rh;
+            };
 
-        const int btnY = rowY + 6;
-        if (!selS.isMaxLevel()) {
-            const int cost = selS.getUpgradeCost();
-            Rectangle ub{static_cast<float>(px + 14), static_cast<float>(btnY), 242.0f, 30.0f};
-            char lbl[32]; snprintf(lbl, sizeof(lbl), "UPGRADE  (%dg)", cost);
-            if (currency_ < cost) GuiSetState(STATE_DISABLED);
-            if (GuiButton(ub, lbl) && currency_ >= cost) { currency_ -= cost; solarCells_[selectedSolarIdx_].upgrade(); }
-            GuiSetState(STATE_NORMAL);
-            Rectangle sb{static_cast<float>(px + 14), static_cast<float>(btnY + 35), 242.0f, 30.0f};
+            snprintf(b1, sizeof(b1), "%dg", selS.getReward());
+            if (!selS.isMaxLevel()) { snprintf(b2, sizeof(b2), "%dg", selS.getReward() + 3); drawStat("Reward", b1, b2); }
+            else drawStat("Reward", b1, nullptr);
+
+            snprintf(b1, sizeof(b1), "%.1fs", selS.getInterval());
+            if (!selS.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.1fs", selS.getInterval() - 0.2f); drawStat("Interval", b1, b2); }
+            else drawStat("Interval", b1, nullptr);
+
+            // ── Buttons: draw inside transform, click detection outside ──
+            const int btnY = rowY + 6;
             const int sRefund = selS.getSellRefund();
-            snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
-            if (GuiButton(sb, lbl)) {
-                sellConfirmIdx_ = selectedSolarIdx_;
-                sellConfirmIsTurret_ = false;
-                sellConfirmGold_ = sRefund;
-                sellConfirmTimer_ = 5.0f;
-                sellConfirmSelCol_ = selS.getCol();
-                sellConfirmSelRow_ = selS.getRow();
-            }
-        } else {
-            raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", 16)/2, btnY + 6, 16, GOLD);
-            Rectangle sb{static_cast<float>(px + 14), static_cast<float>(btnY + 30), 242.0f, 30.0f};
-            const int sRefund = selS.getSellRefund();
-            char lbl[32]; snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
-            if (GuiButton(sb, lbl)) {
-                sellConfirmIdx_ = selectedSolarIdx_;
-                sellConfirmIsTurret_ = false;
-                sellConfirmGold_ = sRefund;
-                sellConfirmTimer_ = 5.0f;
-                sellConfirmSelCol_ = selS.getCol();
-                sellConfirmSelRow_ = selS.getRow();
-            }
-        }
-        // ── X close button (top-right corner) ──
-        {
-            constexpr int kBtnS = 24;
-            const int xBtnX = px + panelW - kBtnS - 6;
-            const int xBtnY = py + 5;
-            if (GuiButton({static_cast<float>(xBtnX), static_cast<float>(xBtnY),
-                           static_cast<float>(kBtnS), static_cast<float>(kBtnS)}, "X")) {
-                selectedSolarIdx_ = -1;
+
+            auto scrRect = [&](float l, float t, float w, float h) -> raylib::Rectangle {
+                return {
+                    (l - panelCx) * detailS + tx,
+                    (t - panelCy) * detailS + ty,
+                    w * detailS,
+                    h * detailS
+                };
+            };
+            auto isHover = [&](const raylib::Rectangle& r) -> bool {
+                return mp.x >= r.x && mp.x < r.x + r.width
+                    && mp.y >= r.y && mp.y < r.y + r.height;
+            };
+            auto drawBtn = [&](float l, float t, float w, float h, const char* text, float fs, Color normal, Color hoverC, bool disabled) {
+                const auto sr2 = scrRect(l, t, w, h);
+                const bool hov = !disabled && isHover(sr2);
+                DrawRectangleRounded({l, t, w, h}, 0.2f, 8, disabled ? Color{30, 30, 30, 180} : (hov ? hoverC : normal));
+                raylib::DrawText(text,
+                    static_cast<int>(l + w/2 - MeasureText(text, static_cast<int>(fs))/2),
+                    static_cast<int>(t + h/2 - fs/2),
+                    static_cast<int>(fs), disabled ? GRAY : WHITE);
+                return hov;
+            };
+
+            if (!selS.isMaxLevel()) {
+                const int cost = selS.getUpgradeCost();
+                char lbl[32]; snprintf(lbl, sizeof(lbl), "UPGRADE  (%dg)", cost);
+                const bool canAfford = (currency_ >= cost);
+                const bool upHov = drawBtn(px + 14, btnY, 242.0f, 30.0f, lbl, 14,
+                    Color{40, 80, 160, 230}, Color{60, 120, 220, 230}, !canAfford);
+
+                char sLbl[32]; snprintf(sLbl, sizeof(sLbl), "SELL  (%dg)", sRefund);
+                const bool sellHov = drawBtn(px + 14, btnY + 35, 242.0f, 30.0f, sLbl, 14,
+                    Color{40, 40, 40, 230}, Color{60, 60, 60, 230}, false);
+
+                constexpr int kBtnS = 24;
+                const int xBtnX = px + panelW - kBtnS - 6;
+                const int xBtnY2 = py + 5;
+                const bool xHov = drawBtn(xBtnX, xBtnY2, kBtnS, kBtnS, "X", 14,
+                    Color{60, 30, 30, 230}, Color{100, 40, 40, 230}, false);
+
+                rlPopMatrix();
+
+                if (upHov && canAfford && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    currency_ -= cost; solarCells_[selectedSolarIdx_].upgrade();
+                }
+                if (sellHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    sellConfirmIdx_ = selectedSolarIdx_;
+                    sellConfirmIsTurret_ = false;
+                    sellConfirmGold_ = sRefund;
+                    sellConfirmTimer_ = 5.0f;
+                    sellConfirmSelCol_ = selS.getCol();
+                    sellConfirmSelRow_ = selS.getRow();
+                }
+                if (xHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    selectedSolarIdx_ = -1;
+                }
+            } else {
+                raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", 16)/2, btnY + 6, 16, GOLD);
+                char sLbl[32]; snprintf(sLbl, sizeof(sLbl), "SELL  (%dg)", sRefund);
+                const bool sellHov = drawBtn(px + 14, btnY + 30, 242.0f, 30.0f, sLbl, 14,
+                    Color{40, 40, 40, 230}, Color{60, 60, 60, 230}, false);
+
+                constexpr int kBtnS = 24;
+                const int xBtnX = px + panelW - kBtnS - 6;
+                const int xBtnY2 = py + 5;
+                const bool xHov = drawBtn(xBtnX, xBtnY2, kBtnS, kBtnS, "X", 14,
+                    Color{60, 30, 30, 230}, Color{100, 40, 40, 230}, false);
+
+                rlPopMatrix();
+
+                if (sellHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    sellConfirmIdx_ = selectedSolarIdx_;
+                    sellConfirmIsTurret_ = false;
+                    sellConfirmGold_ = sRefund;
+                    sellConfirmTimer_ = 5.0f;
+                    sellConfirmSelCol_ = selS.getCol();
+                    sellConfirmSelRow_ = selS.getRow();
+                }
+                if (xHov && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    selectedSolarIdx_ = -1;
+                }
             }
         }
     }
