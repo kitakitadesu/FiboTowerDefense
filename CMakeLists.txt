@@ -36,6 +36,31 @@ FetchContent_Declare(entt
 )
 FetchContent_MakeAvailable(entt)
 
+# Fetch backward-cpp header (pretty stack traces on crash, header-only mode)
+# We use header-only + FetchContent_Populate (no add_subdirectory) to avoid:
+#   1. macOS aarch64 bug in backward.cpp (uc_mcontext.pc vs ->__ss.__pc)
+#   2. backward's old cmake_minimum_required (2.8.12)
+cmake_policy(SET CMP0169 OLD)  # FetchContent_Populate is fine for header-only deps
+FetchContent_Declare(backward
+    GIT_REPOSITORY https://github.com/bombela/backward-cpp.git
+    GIT_TAG v1.5
+)
+FetchContent_GetProperties(backward)
+if(NOT backward_POPULATED)
+    FetchContent_Populate(backward)
+    # Patch backward.hpp for macOS aarch64: old __aarch64__ block uses `.pc` on a
+    # pointer (uc_mcontext is `__darwin_mcontext64 *` on Apple Silicon).  Apple
+    # arm64 stores PC at uc_mcontext->__ss.__pc.  We insert a new condition before
+    # the broken one so macOS arm64 takes the correct path.
+    file(READ "${backward_SOURCE_DIR}/backward.hpp" BACKWARD_HPP)
+    string(REPLACE
+      "#elif defined(__aarch64__)\n    error_addr = reinterpret_cast<void *>(uctx->uc_mcontext.pc);"
+      "#elif defined(__aarch64__) && !defined(__APPLE__)\n    error_addr = reinterpret_cast<void *>(uctx->uc_mcontext.pc);\n#elif defined(__APPLE__) && defined(__aarch64__)\n    error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__pc);"
+      BACKWARD_HPP "${BACKWARD_HPP}")
+    file(WRITE "${backward_SOURCE_DIR}/backward.hpp" "${BACKWARD_HPP}")
+endif()
+cmake_policy(SET CMP0169 NEW)  # restore default
+
 # Main executable
 add_executable(FiboTowerDefense
     src/main.cpp
@@ -56,6 +81,7 @@ add_executable(FiboTowerDefense
 target_link_libraries(FiboTowerDefense
     raylib
     raylib_cpp
+    # backward-cpp (header-only, via include dir only)
 )
 
 # Include directories
@@ -64,6 +90,7 @@ target_include_directories(FiboTowerDefense
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${raylib_cpp_SOURCE_DIR}/include
     ${entt_SOURCE_DIR}/src
+    ${backward_SOURCE_DIR}
 )
 
 # Compiler flags

@@ -1,6 +1,12 @@
 #include "game.hpp"
 
+// ── backward-cpp: pretty stack traces on crash ──
+#define BACKWARD_HEADER_ONLY
+#include <backward.hpp>
+
 int main() {
+    backward::SignalHandling sh;  // handles SIGSEGV, SIGABRT, etc.
+
     Game game;
 
     const int kInitW = static_cast<int>(720.0f * game.getBoard().getAspectRatio());
