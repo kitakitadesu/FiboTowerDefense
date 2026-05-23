@@ -43,11 +43,11 @@ test:build_validation:
     - build:windows
   before_script:
     - apt-get update -qq && apt-get install -y -qq file unzip
-  script:
-    - unzip -o FiboTowerDefense-windows.zip -d test-exe
-    - file test-exe/FiboTowerDefense.exe
-    - file test-exe/FiboTowerDefense.exe | grep -qiE "PE32|executable"
-    - if ! test -f test-exe/map_day_0.png; then echo "Missing asset: map_day_0.png"; exit 1; fi
+  script: |
+    unzip -o FiboTowerDefense-windows.zip -d test-exe
+    file test-exe/FiboTowerDefense.exe
+    file test-exe/FiboTowerDefense.exe | grep -qiE PE32
+    if ! test -f test-exe/map_day_0.png; then echo "Missing asset: map_day_0.png"; exit 1; fi
   only:
     - merge_requests
     - main
