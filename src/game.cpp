@@ -262,6 +262,7 @@ void Game::renderEndScreen() {
     ClearBackground({20, 20, 20, 255});
 
     const int cx = GetScreenWidth() / 2, cy = GetScreenHeight() / 2;
+    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, (int)ColorToInt(Color{70, 70, 70, 255}));
     DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
 
     const bool isGameOver = (state_ == GameState::Lost);

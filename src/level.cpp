@@ -237,6 +237,9 @@ void Level::renderUI() {
     auto s = [&](int v) { return static_cast<int>(v * kScale); };
     const int panelW = s(270);
 
+    // ── Global button hover color (neutral gray, no blue cast) ──
+    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, (int)ColorToInt(Color{70, 70, 70, 255}));
+
     // ── Build mode keyboard shortcuts ──
     if (IsKeyPressed(KEY_T)) placingMode_ = BuildMode::ShootTurret;
     if (IsKeyPressed(KEY_M)) placingMode_ = BuildMode::MeleeTurret;
@@ -278,14 +281,12 @@ void Level::renderUI() {
             if (!affordable && !active) GuiSetState(STATE_DISABLED);
 
             int ob = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
-            int of = GuiGetStyle(BUTTON, BASE_COLOR_FOCUSED);
             int ot = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
 
             if (active) {
                 GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, (int)ColorToInt(Color{255, 140, 20, 255}));
                 GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, (int)ColorToInt(WHITE));
             }
-            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, (int)ColorToInt(Color{60, 60, 80, 255}));
 
             if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
                            static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
@@ -294,7 +295,6 @@ void Level::renderUI() {
             }
 
             GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ob);
-            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, of);
             GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ot);
 
             GuiSetState(STATE_NORMAL);
