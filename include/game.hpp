@@ -44,9 +44,7 @@ public:
     bool shouldRestart() const { return shouldRestart_; }
     void resetForRestart();
 
-    Board&      getBoard()        { return board_; }
-    Level*      getCurrentLevel() { return currentLevel_.get(); }
-    Scoreboard& getScoreboard()   { return scoreboard_; }
+    Board& getBoard() { return board_; }
 
 private:
     void rebuildWaypoints();
