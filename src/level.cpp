@@ -777,7 +777,7 @@ clickHandled:
         const int rowH = fs + s(6);
 
         const int pw = s(235);
-        const int ph = margin * 2 + rowH * 4 + s(16);
+        const int ph = margin * 2 + rowH * 3 + s(16);
         DrawRectangle(margin, margin, pw, ph, {15, 15, 25, 200});
 
         int y = margin + s(12);
@@ -805,9 +805,6 @@ clickHandled:
         }
         y = barY + barH + 10;
 
-        // Structures
-        std::string turretStr = std::to_string(turretsPlaced_) + "  " + std::to_string(solarPlaced_);
-        raylib::DrawText(turretStr.c_str(), margin + s(14), y, sfs, LIGHTGRAY);
 
         // Score (top-right)
         std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
