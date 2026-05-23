@@ -9,7 +9,9 @@ variables:
 # Windows cross-compile (MinGW-w64 on Linux Docker)
 build:windows:
   stage: build
-  image: ubuntu:24.04
+  image:
+    name: ubuntu:24.04
+    pull_policy: if-not-present
   before_script:
     - apt-get update -qq
     - apt-get install -y -qq cmake make git mingw-w64
@@ -38,7 +40,9 @@ build:windows:
 # Build validation test
 test:build_validation:
   stage: test
-  image: ubuntu:24.04
+  image:
+    name: ubuntu:24.04
+    pull_policy: if-not-present
   dependencies:
     - build:windows
   before_script:
@@ -55,7 +59,9 @@ test:build_validation:
 # Web build + GitLab Pages (deployed on feat/web-target branch)
 pages:
   stage: deploy
-  image: emscripten/emsdk:4.0.23
+  image:
+    name: emscripten/emsdk:4.0.23
+    pull_policy: if-not-present
   before_script:
     # emsdk images ship cmake 3.22 (Ubuntu 22.04 base); raylib needs ≥3.25
     - pip3 install cmake --upgrade -q
