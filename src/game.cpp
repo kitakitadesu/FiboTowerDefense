@@ -328,7 +328,7 @@ void Game::render() {
         const int btnS = 36;
         const int btnX = GetScreenWidth() - btnS - 15;
         const int btnY = 15;
-        const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "II";
+        const char* icon = (state_ == GameState::Paused) ? ">" : "||";
 
         DrawRectangle(btnX, btnY, btnS, btnS, {15, 15, 25, 200});
         raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
