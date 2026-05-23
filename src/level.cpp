@@ -2,17 +2,22 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
 #include <string>
 
 #include <raygui.h>
 
-Level::Level(Board& grid, Tower& tower, Scoreboard& scoreboard)
+namespace {
+    constexpr float  kEnemyDPS        = 10.0f;
+    constexpr int    kCostShootTurret = 100;
+    constexpr int    kCostMeleeTurret = 80;
+    constexpr int    kCostSolarCell   = 60;
+    constexpr int    kGridRows        = 5;
+}
+
+Level::Level(GameBoard& grid, Tower& tower, Scoreboard& scoreboard)
     : id_(IdGenerator::getNextId()), grid_(grid), tower_(tower), scoreboard_(scoreboard),
       waveMgr_(grid)
 {
-    listenToEvents();
-
     sfxSelect_ = LoadSound("assets/select_006.ogg");
     sfxPlace_  = LoadSound("assets/drop_001.ogg");
     sfxError_  = LoadSound("assets/error_008.ogg");
@@ -21,14 +26,6 @@ Level::~Level() {
     UnloadSound(sfxSelect_);
     UnloadSound(sfxPlace_);
     UnloadSound(sfxError_);
-}
-
-void Level::listenToEvents() {
-    events_.sink<EnemyKilledEvent>().connect<&Level::onEnemyKilled>(this);
-}
-
-void Level::onEnemyKilled(const EnemyKilledEvent& event) {
-    (void)event;
 }
 
 bool Level::spendCurrency(int amt) {
@@ -101,41 +98,54 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     for (auto& p : projectiles_) p->update(dt);
 
     // ── enemies — collision with turrets / solar ──
-    const float enemyDPS = 10.0f;
-    for (auto& e : enemies_) {
-        if (e->getState() != Enemy::WALKING) continue;
+    {
+        // Row-bucketed lookup: O(T + S) build + O(E * avgPerRow) collision
+        // vs O(E * T + E * S) naive nested loops
+        std::array<std::vector<Turret*>, kGridRows> turretsByRow;
+        for (auto& t : turrets_)
+            if (t.isAlive())
+                turretsByRow[t.getRow()].push_back(&t);
 
-        bool blocked = false;
-        for (auto& t : turrets_) {
-            if (!t.isAlive() || t.getRow() != e->getRow()) continue;
-            const auto cellR = grid_.cellRect(t.getCol(), t.getRow());
-            const float tx = static_cast<float>(cellR.x + cellR.w / 2);
-            const float cellHalfW = cellR.w * 0.4f;
-            const float dx = tx - e->getPosition().x;
-            if (dx > 0 && dx < cellHalfW + e->getRadius()) {
-                blocked = true;
-                t.takeDamage(enemyDPS * dt);
-                break;
-            }
-        }
+        std::array<std::vector<SolarCell*>, kGridRows> solarByRow;
+        for (auto& sc : solarCells_)
+            if (sc.isAlive())
+                solarByRow[sc.getRow()].push_back(&sc);
 
-        if (!blocked) {
-            for (auto& sc : solarCells_) {
-                if (sc.getRow() != e->getRow()) continue;
-                const auto cellR = grid_.cellRect(sc.getCol(), sc.getRow());
-                const float sx = static_cast<float>(cellR.x + cellR.w / 2);
+        for (auto& e : enemies_) {
+            if (e->getState() != Enemy::WALKING) continue;
+
+            const int row = e->getRow();
+            bool blocked = false;
+
+            for (auto* t : turretsByRow[row]) {
+                const auto cellR = grid_.cellRect(t->getCol(), t->getRow());
+                const float tx = static_cast<float>(cellR.x + cellR.w / 2);
                 const float cellHalfW = cellR.w * 0.4f;
-                const float dx = sx - e->getPosition().x;
+                const float dx = tx - e->getPosition().x;
                 if (dx > 0 && dx < cellHalfW + e->getRadius()) {
                     blocked = true;
-                    sc.takeDamage(enemyDPS * dt);
+                    t->takeDamage(kEnemyDPS * dt);
                     break;
                 }
             }
-        }
 
-        if (!blocked)
-            e->update(dt, laneWps[e->getRow()]);
+            if (!blocked) {
+                for (auto* sc : solarByRow[row]) {
+                    const auto cellR = grid_.cellRect(sc->getCol(), sc->getRow());
+                    const float sx = static_cast<float>(cellR.x + cellR.w / 2);
+                    const float cellHalfW = cellR.w * 0.4f;
+                    const float dx = sx - e->getPosition().x;
+                    if (dx > 0 && dx < cellHalfW + e->getRadius()) {
+                        blocked = true;
+                        sc->takeDamage(kEnemyDPS * dt);
+                        break;
+                    }
+                }
+            }
+
+            if (!blocked)
+                e->update(dt, laneWps[row]);
+        }
     }
 
     // ── cleanup impacted projectiles ──
@@ -152,7 +162,6 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 "+" + std::to_string(e->getReward()),
                 GOLD, 1.0f, 1.0f, {0.0f, -40.0f}
             });
-            events_.trigger(EnemyKilledEvent{e->getPosition()});
         }
         if (e->isEscaped()) {
             if (!cheatMode_)
@@ -237,7 +246,7 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
 
 static void drawRow(int r, const raylib::Texture* g, const std::vector<Turret>& tur,
                     const std::vector<SolarCell>& sol, const std::vector<std::unique_ptr<Enemy>>& ene,
-                    const Board& b)
+                    const GameBoard& b)
 {
     for (auto& t : tur) if (t.getRow() == r) {
         auto cr = b.cellRect(t.getCol(), t.getRow());
@@ -375,9 +384,9 @@ void Level::renderUI() {
             GuiSetState(STATE_NORMAL);
         };
 
-        const bool affordableShoot = currency_ >= 100;
-        const bool affordableMelee = currency_ >= 80;
-        const bool affordableSolar = currency_ >= 60;
+        const bool affordableShoot = currency_ >= kCostShootTurret;
+        const bool affordableMelee = currency_ >= kCostMeleeTurret;
+        const bool affordableSolar = currency_ >= kCostSolarCell;
 
         buildBtn(0, "Tower  (T)  100g", BuildMode::ShootTurret, affordableShoot);
         buildBtn(1, "Melee  (M)  80g",  BuildMode::MeleeTurret, affordableMelee);
@@ -420,18 +429,21 @@ void Level::renderUI() {
             const int col = hovered % grid_.getColCount();
             const int row = hovered / grid_.getColCount();
 
-            // Check if an entity exists at this cell
+            // Check if an entity exists at this cell (via PlacementGrid)
             int foundTurret = -1;
             int foundSolar  = -1;
-            for (int i = 0; i < static_cast<int>(turrets_.size()); ++i) {
-                if (turrets_[i].getCol() == col && turrets_[i].getRow() == row) {
-                    foundTurret = i; break;
+            if (placements_.isOccupied(row, col)) {
+                char occ = placements_.occupantType(row, col);
+                for (int i = 0; i < static_cast<int>(turrets_.size()); ++i) {
+                    if (turrets_[i].getCol() == col && turrets_[i].getRow() == row) {
+                        foundTurret = i; break;
+                    }
                 }
-            }
-            if (foundTurret < 0) {
-                for (int i = 0; i < static_cast<int>(solarCells_.size()); ++i) {
-                    if (solarCells_[i].getCol() == col && solarCells_[i].getRow() == row) {
-                        foundSolar = i; break;
+                if (foundTurret < 0 && occ == PlacementGrid::kSolar) {
+                    for (int i = 0; i < static_cast<int>(solarCells_.size()); ++i) {
+                        if (solarCells_[i].getCol() == col && solarCells_[i].getRow() == row) {
+                            foundSolar = i; break;
+                        }
                     }
                 }
             }
@@ -449,19 +461,23 @@ void Level::renderUI() {
                 selectedTurretIdx_ = -1;
                 selectedSolarIdx_  = -1;
                 int cost = 0;
-                if (placingMode_ == BuildMode::ShootTurret) cost = 100;
-                else if (placingMode_ == BuildMode::MeleeTurret) cost = 80;
-                else if (placingMode_ == BuildMode::SolarCell) cost = 60;
+                if (placingMode_ == BuildMode::ShootTurret) cost = kCostShootTurret;
+                else if (placingMode_ == BuildMode::MeleeTurret) cost = kCostMeleeTurret;
+                else if (placingMode_ == BuildMode::SolarCell) cost = kCostSolarCell;
                 if (currency_ >= cost) {
                     currency_ -= cost;
                     PlaySound(sfxPlace_);
 
-                    if (placingMode_ == BuildMode::ShootTurret)
+                    if (placingMode_ == BuildMode::ShootTurret) {
                         addTurret(Turret(col, row, TurretType::Shooting, 0, 1.5f, 25));
-                    else if (placingMode_ == BuildMode::MeleeTurret)
+                        placements_.place(row, col, PlacementGrid::kTurret);
+                    } else if (placingMode_ == BuildMode::MeleeTurret) {
                         addTurret(Turret(col, row, TurretType::Melee, 120, 1.2f, 35));
-                    else if (placingMode_ == BuildMode::SolarCell)
+                        placements_.place(row, col, PlacementGrid::kTurret);
+                    } else if (placingMode_ == BuildMode::SolarCell) {
                         addSolarCell(SolarCell(col, row));
+                        placements_.place(row, col, PlacementGrid::kSolar);
+                    }
                 } else {
                     PlaySound(sfxError_);
 
@@ -789,6 +805,7 @@ clickHandled:
                         currency_ += sellConfirmGold_;
                         floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
                             "+" + std::to_string(sellConfirmGold_) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
+                        placements_.remove(sellConfirmSelRow_, sellConfirmSelCol_);
                         turrets_.erase(turrets_.begin() + static_cast<int>(i));
                         --turretsPlaced_;
                         break;
@@ -801,6 +818,7 @@ clickHandled:
                         currency_ += sellConfirmGold_;
                         floatingTexts_.push_back({{static_cast<float>(sr.x + sr.w/2), static_cast<float>(sr.y)},
                             "+" + std::to_string(sellConfirmGold_) + "g", GOLD, 1.0f, 1.0f, {0.0f, -50.0f}});
+                        placements_.remove(sellConfirmSelRow_, sellConfirmSelCol_);
                         solarCells_.erase(solarCells_.begin() + static_cast<int>(i));
                         --solarPlaced_;
                         break;

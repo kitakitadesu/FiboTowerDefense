@@ -27,19 +27,11 @@ public:
     // -- raw texture access (for shared use) --
     const raylib::Texture& getTexture() const { return texture_; }
 
-    // -- animation (spritesheet prep) --
-    void setFrameCount(int count);
-    int  getFrameCount() const { return frameCount_; }
-    void setFrame(int frame);
-    int  getFrame() const { return frame_; }
-
 private:
     raylib::Image   image_;
     raylib::Texture texture_;
     bool loaded_ = false;
 
-    int frameW_      = 0;
-    int frameH_      = 0;
-    int frameCount_  = 1;
-    int frame_       = 0;
+    int frameW_ = 0;
+    int frameH_ = 0;
 };

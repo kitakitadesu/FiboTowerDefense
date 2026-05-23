@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "board.hpp"
+#include "game_board.hpp"
 #include "id_generator.hpp"
 #include "identifier.hpp"
 #include "level.hpp"
@@ -44,9 +44,7 @@ public:
     bool shouldRestart() const { return shouldRestart_; }
     void resetForRestart();
 
-    Board&      getBoard()        { return board_; }
-    Level*      getCurrentLevel() { return currentLevel_.get(); }
-    Scoreboard& getScoreboard()   { return scoreboard_; }
+    GameBoard& getBoard() { return board_; }
 
 private:
     void rebuildWaypoints();
@@ -57,7 +55,7 @@ private:
     bool shouldRestart_ = false;
     GameState state_ = GameState::Menu;
 
-    Board board_;
+    GameBoard board_;
     Tower tower_;
     Scoreboard scoreboard_;
     std::unique_ptr<Level> currentLevel_;
