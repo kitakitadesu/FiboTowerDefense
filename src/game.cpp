@@ -181,6 +181,21 @@ void Game::update(float dt) {
         }
     }
 
+    // ── aspect ratio lock (native only) ──
+#ifndef __EMSCRIPTEN__
+    if (IsWindowResized()) {
+        const int curW = GetScreenWidth();
+        const int curH = GetScreenHeight();
+        const float ratio = board_.getAspectRatio();
+        const int targetH = static_cast<int>(std::round(static_cast<float>(curW) / ratio));
+        if (std::abs(curH - targetH) > 1) {
+            SetWindowSize(curW, targetH);
+            // Will trigger another IsWindowResized next frame, but prevW won't change
+            // so scale/waypoints won't double-update.
+        }
+    }
+#endif
+
     // ── cheat input ──
     {
         int key = GetKeyPressed();
