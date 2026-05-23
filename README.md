@@ -176,7 +176,7 @@ This project uses raylib (zlib/libpng license). See raylib repository for detail
 
 ## 📹 Demo Video
 
-▶️ _[YouTube link — coming soon]_
+▶️ [_[YouTube link — coming soon]_](https://youtu.be/PYPrsPVu_YU)
 
 ---
 
