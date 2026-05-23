@@ -235,7 +235,7 @@ void Game::render() {
     const raylib::Texture* gooseRaw = &gooseTex_.getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(gooseRaw, &nightMapTex_, nightAlpha_);
+        currentLevel_->render(gooseRaw, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }
