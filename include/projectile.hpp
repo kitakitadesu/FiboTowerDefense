@@ -17,7 +17,7 @@ public:
     /// Returns true when projectile has hit the target.
     bool update(float dt);
 
-    void draw() const;
+    void draw(bool isNight) const;
 
     bool hasImpacted() const { return impacted_; }
 

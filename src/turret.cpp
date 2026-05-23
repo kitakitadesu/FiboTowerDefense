@@ -74,7 +74,7 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
     return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage());
 }
 
-void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
+void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, bool isNight) const {
     if (hp_ <= 0.0f) return;
     const float s = 50.0f;
     const float h = s / 2;
@@ -84,7 +84,11 @@ void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos) const {
                                    static_cast<float>(tex->height)};
         const Rectangle dst{screenPos.x - h, screenPos.y - h, s, s};
 
-        tex->Draw(src, dst, {}, 0.0f, raylib::Color::White());
+        // Goose glows blue at night
+        raylib::Color tint = (isNight && type_ == TurretType::Goose)
+            ? raylib::Color{120, 180, 255, 255}
+            : raylib::Color::White();
+        tex->Draw(src, dst, {}, 0.0f, tint);
     } else {
         const raylib::Color c = (type_ == TurretType::UR3e) ? BLUE : ORANGE;
         DrawRectangle(static_cast<int>(screenPos.x - h),

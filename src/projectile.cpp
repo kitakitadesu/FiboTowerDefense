@@ -34,10 +34,15 @@ bool Projectile::update(float dt) {
     return false;
 }
 
-void Projectile::draw() const {
+void Projectile::draw(bool isNight) const {
     if (impacted_) return;
-    // Glow effect
-    DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 8, {255, 255, 0, 100});
-    // Core
-    DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 4, {255, 255, 200, 255});
+    if (isNight) {
+        // Night: brighter, larger yellow glow
+        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 12, {255, 255, 0, 120});
+        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 5, {255, 255, 150, 255});
+    } else {
+        // Day: normal glow
+        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 8, {255, 255, 0, 100});
+        DrawCircle(static_cast<int>(pos_.x), static_cast<int>(pos_.y), 4, {255, 255, 200, 255});
+    }
 }
