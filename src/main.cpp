@@ -11,6 +11,9 @@ int main() {
     window.SetTargetFPS(60);
     SetExitKey(0);  // disable raylib default ESC→quit; we handle ESC manually
 
+    // เปิดระบบเสียง
+    InitAudioDevice();
+
     // Load GPU textures (must happen after Window creation)
     game.init();
 
@@ -30,6 +33,9 @@ int main() {
             }
         }
     }
+
+    // --- ปิดระบบเสียง ---
+    CloseAudioDevice();
 
     return 0;
 }

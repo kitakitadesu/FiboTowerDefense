@@ -17,7 +17,21 @@ Game::Game()
     rebuildWaypoints();
 }
 
-Game::~Game() = default;
+Game::~Game() {
+    UnloadMusicStream(menuMusic_);
+    UnloadMusicStream(dayMusic_);
+    // UnloadMusicStream(nightMusic_);
+}
+
+void Game::switchMusic(Music* newMusic) {
+    if (currentMusic_ != newMusic) {
+        if (currentMusic_ != nullptr) {
+            StopMusicStream(*currentMusic_);
+        }
+        currentMusic_ = newMusic;
+        PlayMusicStream(*currentMusic_);
+    }
+}
 
 void Game::rebuildWaypoints() {
     for (int r = 0; r < board_.getRowCount(); ++r)
@@ -40,9 +54,18 @@ void Game::handleCheatKey(int key) {
 void Game::init() {
     board_.loadTexture();
     gooseTex_.loadTexture();
+
+    menuMusic_ = LoadMusicStream("assets/dayMusic_Signal_at_the_Tower.mp3");
+    dayMusic_ = LoadMusicStream("assets/menuMusic_Clocktower_Circuit.mp3");
+    // nightMusic_ = LoadMusicStream("assets/bgm_night.mp3");
+
+    switchMusic(&menuMusic_);
 }
 
 void Game::start() {
+    // ถ้าอนาคตมีด่านกลางคืน ค่อยเขียน if เช็คตรงนี้
+    switchMusic(&dayMusic_);
+
     board_.updateScale(GetScreenWidth());
     rebuildWaypoints();
 
@@ -81,6 +104,10 @@ void Game::resetForRestart() {
 
 void Game::update(float dt) {
     if (!running_) return;
+
+    if (currentMusic_ != nullptr) {
+        UpdateMusicStream(*currentMusic_);
+    }
 
     // ── aspect-ratio lock ──
     if (IsWindowResized()) {

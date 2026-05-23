@@ -68,4 +68,11 @@ private:
 
     Sprite gooseTex_;
     std::vector<std::vector<raylib::Vector2>> laneWps_;
+
+    Music menuMusic_;
+    Music dayMusic_;
+    // Music nightMusic_;
+    Music* currentMusic_ = nullptr; // ตัวชี้ว่าตอนนี้เล่นเพลงไหนอยู่
+
+    void switchMusic(Music* newMusic);
 };
