@@ -34,10 +34,62 @@
     <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
 
     <style>
-        body { margin: 0px; overflow: hidden; background-color: black; }
-        canvas.emscripten { border: 0px none; background-color: black; }
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #game-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+        }
+        canvas.emscripten {
+            border: 0 none;
+            background-color: #000;
+            max-width: 100vw;
+            max-height: 100vh;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1672 / 942;
+        }
     </style>
-    <script type='text/javascript' src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js/dist/FileSaver.min.js"> </script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #game-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+        }
+        canvas.emscripten {
+            border: 0 none;
+            background-color: #000;
+            display: block;
+        }
+    </style>
+    <script>
+        // Maintain aspect ratio on resize
+        function resizeCanvas() {
+            var c = document.getElementById('canvas');
+            var maxW = window.innerWidth;
+            var maxH = window.innerHeight;
+            var ratio = 1672 / 942;
+            var w, h;
+            if (maxW / maxH > ratio) {
+                h = maxH;
+                w = h * ratio;
+            } else {
+                w = maxW;
+                h = w / ratio;
+            }
+            c.style.width = Math.floor(w) + 'px';
+            c.style.height = Math.floor(h) + 'px';
+        }
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', resizeCanvas);
+    </script>
     <script type='text/javascript'>
         function saveFileFromMEMFSToDisk(memoryFSname, localFSname)     // This can be called by C/C++ code
         {
