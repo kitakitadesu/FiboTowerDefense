@@ -72,6 +72,8 @@ private:
     Sprite gooseNight_{"assets/goose_night_64x64.png"};
     Sprite solarDay_{"assets/solar_day_64x64.png"};
     Sprite solarNight_{"assets/solar_night_64x64.png"};
+    Sprite manDay_{"assets/man/man_day_64x64.png"};
+    Sprite manNight_{"assets/man/man_night_64x64.png"};
     Sprite menuImage_{"assets/GameMenu_edit2.png"};
     std::vector<std::vector<raylib::Vector2>> laneWps_;
 
