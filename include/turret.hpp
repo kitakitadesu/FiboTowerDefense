@@ -53,6 +53,9 @@ public:
     float getHp()       const { return hp_; }
     float getMaxHp()    const { return maxHp_; }
     TurretType getTurretType() const { return type_; }
+    float getMeleeAccum() const { return meleeAccum_; }
+    void addMeleeAccum(float v) { meleeAccum_ += v; }
+    void resetMeleeAccum() { meleeAccum_ = 0.0f; }
     float getRange() const {
         return (type_ == TurretType::UR3e) ? 9999.0f
                                            : baseRange_ + (level_ - 1) * 20.0f;
@@ -76,4 +79,5 @@ private:
     float  maxHp_;
     bool   dead_ = false;
     int    level_ = 1;
+    float  meleeAccum_ = 0.0f;
 };

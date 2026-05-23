@@ -134,8 +134,11 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 if (dx > 0 && dx < cellHalfW + e->getRadius()) {
                     blocked = true;
                     t->takeDamage(kEnemyDPS * dt);
-                    if (t->getTurretType() == TurretType::Goose)
-                        e->takeDamage(static_cast<int>(t->getDamage() * dt));
+                    if (t->getTurretType() == TurretType::Goose) {
+                        t->addMeleeAccum(t->getDamage() * dt);
+                        int dmg = static_cast<int>(t->getMeleeAccum());
+                        if (dmg > 0) { e->takeDamage(dmg); t->addMeleeAccum(-dmg); }
+                    }
                     if (towerHitSound_) PlaySound(*towerHitSound_);
                     break;
                 }
