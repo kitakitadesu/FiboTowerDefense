@@ -777,15 +777,29 @@ clickHandled:
         const int rowH = fs + s(6);
 
         const int pw = s(235);
-        const int ph = margin * 2 + rowH * 3 + s(16);
-        DrawRectangle(margin, margin, pw, ph, {15, 15, 25, 200});
+        DrawRectangle(margin, margin, pw, s(130), {15, 15, 25, 200});
 
         int y = margin + s(12);
 
-        // Lives
-        std::string livesStr = "HP  " + std::to_string(tower_.getHp()) + "/" + std::to_string(tower_.getMaxHp());
-        raylib::DrawText(livesStr.c_str(), margin + s(14), y, fs, {255, 80, 80, 255});
-        y += rowH;
+        // Lives — health bar + text
+        {
+            const int barW = pw - s(30);
+            const int barH = s(12);
+            const int txtX = margin + s(14);
+            const int barX = margin + s(15);
+            const int barY = y + fs + s(4);
+
+            std::string hpStr = "HP " + std::to_string(static_cast<int>(tower_.getHp())) + "/" + std::to_string(static_cast<int>(tower_.getMaxHp()));
+            raylib::DrawText(hpStr.c_str(), txtX, y, fs, {255, 80, 80, 255});
+
+            const float ratio = static_cast<float>(tower_.getHp()) / static_cast<float>(tower_.getMaxHp());
+            raylib::Color barColor = (ratio > 0.5f) ? Color{60, 200, 80, 220} :
+                                     (ratio > 0.25f) ? Color{220, 160, 40, 220} :
+                                                        Color{220, 50, 50, 220};
+            DrawRectangle(barX, barY, barW, barH, {30, 30, 40, 200});
+            DrawRectangle(barX, barY, static_cast<int>(barW * ratio), barH, barColor);
+            y = barY + barH + s(8);
+        }
 
         // Gold
         std::string goldStr = "$  " + std::to_string(currency_);
@@ -806,12 +820,13 @@ clickHandled:
         y = barY + barH + 10;
 
 
-        // Score (top-right)
+        // Score (top-right, below pause button)
         std::string scoreStr = "Score: " + std::to_string(scoreboard_.getCurrentScore());
         const int scoreW = MeasureText(scoreStr.c_str(), fs) + s(30);
         const int scoreX = scrW - scoreW - margin;
-        DrawRectangle(scoreX, margin, scoreW, fs + 30, {15, 15, 25, 200});
-        raylib::DrawText(scoreStr.c_str(), scoreX + 15, margin + 15, fs, Color{255, 140, 20, 255});
+        const int scoreY = margin + 36 + 6;  // below pause button (36px tall, 6px gap)
+        DrawRectangle(scoreX, scoreY, scoreW, fs + 30, {15, 15, 25, 200});
+        raylib::DrawText(scoreStr.c_str(), scoreX + 15, scoreY + 15, fs, Color{255, 140, 20, 255});
     }
 
     // ── Sell confirmation dialog ──
