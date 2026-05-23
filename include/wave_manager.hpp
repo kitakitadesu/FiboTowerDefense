@@ -35,9 +35,6 @@ public:
     int  getSpawnedCount() const { return spawned_; }
     int  getCurrentWaveEnemyCount() const;
 
-    void setInfiniteMode(bool on) { infinite_ = on; }
-    bool isInfinite()       const { return infinite_; }
-
     /// Call when current wave enemies are all dead/escaped to advance.
     void advanceWave();
     void markWaiting(bool w);
@@ -50,14 +47,13 @@ private:
     float timer_      = 0.0f;
     bool  started_    = false;
     bool  waiting_    = false;
-    bool  infinite_   = false;
 
     int  pickRow() const;
 
-    /// Compute wave params for infinite waves beyond predefined list.
-    int     infiniteEnemyCount() const;
-    int     infiniteHp()    const;
-    float   infiniteSpeed() const;
-    int     infiniteReward() const;
-    float   infiniteInterval() const;
+    // Infinite wave scaling (ramps past last predefined wave)
+    int     infEnemyCount() const;
+    int     infHp()    const;
+    float   infSpeed() const;
+    int     infReward() const;
+    float   infInterval() const;
 };
