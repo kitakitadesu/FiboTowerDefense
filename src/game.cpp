@@ -166,9 +166,6 @@ void Game::update(float dt) {
         int key = GetKeyPressed();
         while (key > 0) { handleCheatKey(key); key = GetKeyPressed(); }
         if (currentLevel_) currentLevel_->setCheatMode(cheatMode_);
-        // Toggle cheat panel with F1 when cheat mode active
-        if (cheatMode_ && IsKeyPressed(KEY_F1))
-            cheatPanelOpen_ = !cheatPanelOpen_;
     }
 
     // ── pause toggle ──
@@ -269,10 +266,12 @@ void Game::render() {
         currentLevel_->renderUI();
     }
 
-    // ── Cheat indicator (hidden on menu) ──
+    // ── Cheat indicator + toggle button (hidden on menu) ──
     if (cheatMode_ && state_ != GameState::Menu) {
-        const char* hint = cheatPanelOpen_ ? "" : " [F1]";
-        raylib::DrawText(TextFormat("CHEAT ON%s", hint), GetScreenWidth() - 150, GetScreenHeight() - 40, 20, Color{255, 140, 20, 255});
+        raylib::DrawText("CHEAT ON", GetScreenWidth() - 130, GetScreenHeight() - 40, 20, Color{255, 140, 20, 255});
+        if (GuiButton({15, (float)GetScreenHeight() - 50, 100, 35}, cheatPanelOpen_ ? "CHEATS >" : "CHEATS")) {
+            cheatPanelOpen_ = !cheatPanelOpen_;
+        }
         if (cheatPanelOpen_) renderCheatPanel();
     }
 
