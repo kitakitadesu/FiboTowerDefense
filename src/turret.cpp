@@ -71,7 +71,15 @@ std::unique_ptr<Projectile> Turret::update(float dt, raylib::Vector2 screenPos,
     if (!target) { cooldown_ = 0.0f; return nullptr; }
 
     cooldown_ = 1.0f / getFireRate();
-    return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage());
+    return std::make_unique<Projectile>(screenPos, target, 300.0f, getDamage(), type_ == TurretType::Goose);
+}
+
+bool Turret::justFired() const {
+    // True if cooldown was just reset (fired this frame)
+    // Cooldown after firing = 1/fireRate. A just-fired turret has
+    // cooldown > 0 and update() was called this frame.
+    return cooldown_ > 0.0f && type_ == TurretType::Goose;
+}
 }
 
 void Turret::draw(const raylib::Texture* tex, raylib::Vector2 screenPos, float cellW, float cellH, bool isNight) const {
