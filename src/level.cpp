@@ -686,8 +686,9 @@ clickHandled:
         y += rowH;
 
         // Wave
-        std::string waveStr = "\xE2\x9A\x94  Wave " + std::to_string(waveMgr_.getCurrentWave() + 1)
-                            + "/" + std::to_string(waveMgr_.getWaveCount());
+        std::string waveStr = "\xE2\x9A\x94  Wave " + std::to_string(waveMgr_.getCurrentWave() + 1);
+        if (!waveMgr_.isInfinite())
+            waveStr += "/" + std::to_string(waveMgr_.getWaveCount());
         raylib::DrawText(waveStr.c_str(), margin + s(14), y, sfs, LIGHTGRAY);
         const int barY = y + s(22);
         const int barW = pw - s(30);
