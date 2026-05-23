@@ -323,28 +323,19 @@ void Game::render() {
         }
     }
 
-    // ── Pause button (always visible when playing/paused) ──
-    if (state_ == GameState::Playing || state_ == GameState::Paused) {
+    // ── Pause button (only during Playing, hidden when paused) ──
+    if (state_ == GameState::Playing) {
         const int btnS = 36;
         const int btnX = GetScreenWidth() - btnS - 15;
         const int btnY = 15;
-        const char* icon = (state_ == GameState::Paused) ? "|>" : "||";
-
+        const char* icon = "||";
         DrawRectangle(btnX, btnY, btnS, btnS, {15, 15, 25, 200});
-
-        if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
-                       static_cast<float>(btnS), static_cast<float>(btnS)}, "")) {
-            if (state_ == GameState::Paused) {
-                state_ = GameState::Playing;
-                if (currentMusic_) ResumeMusicStream(*currentMusic_);
-            } else {
-                state_ = GameState::Paused;
-                if (currentMusic_) PauseMusicStream(*currentMusic_);
-            }
+        if (GuiButton({(float)btnX, (float)btnY, (float)btnS, (float)btnS}, "")) {
+            state_ = GameState::Paused;
+            if (currentMusic_) PauseMusicStream(*currentMusic_);
         }
-        // Draw icon AFTER GuiButton (GuiButton covers with its own rect)
-        const int iconW = MeasureText(icon, 20);
-        raylib::DrawText(icon, btnX + (btnS - iconW) / 2, btnY + (btnS - 20) / 2, 20, WHITE);
+        const int iw = MeasureText(icon, 20);
+        raylib::DrawText(icon, btnX + (btnS - iw) / 2, btnY + (btnS - 20) / 2, 20, WHITE);
     }
 
     // ── Pause overlay ──
