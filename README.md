@@ -180,6 +180,18 @@ This project uses raylib (zlib/libpng license). See raylib repository for detail
 
 ---
 
+## 🚀 Quick Start
+
+| | Link |
+|---|---|
+| 🪟 **Download (Windows)** | [Download from GitLab Artifacts](https://git.bocchichan.moe/bocchi/FiboTowerDefense/-/artifacts) |
+| 🌐 **Play in Browser** | [fibotowerdefense-9feb08.p.bocchichan.moe](https://fibotowerdefense-9feb08.p.bocchichan.moe/) |
+| 🔧 **CI / Source** | [git.bocchichan.moe/bocchi/FiboTowerDefense](https://git.bocchichan.moe/bocchi/FiboTowerDefense) |
+
+> ⚠️ Web version อาจมี performance ต่ำกว่า Windows build แนะนำให้ดาวน์โหลด Windows version เพื่อประสบการณ์ที่ดีที่สุด
+
+---
+
 ## 🎮 How to Play
 
 ศัตรูบุกมาจาก**ฝั่งขวา**ผ่าน 5 เลน มุ่งหน้าทำลายหอคอยของคุณทางซ้าย  
