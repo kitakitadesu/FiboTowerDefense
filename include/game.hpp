@@ -83,6 +83,9 @@ private:
     Sound clickSound_;
     Sound countdownBeep_;
     int   lastCountdownNum_ = -1;
+    Sound gameOverSound_;
+    bool  gameOverSoundPlayed_ = false;
+    
 
     // Name input on end screen
     char  nameInput_[32] = "";
