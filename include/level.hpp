@@ -94,7 +94,7 @@ public:
     // --- lifecycle ---
     void start();
     void update(float dt, const std::vector<std::vector<raylib::Vector2>>& laneWps);
-    void render(const raylib::Texture* gooseRaw);
+    void render(const raylib::Texture* gooseRaw, const Texture2D* nightMap = nullptr, float nightAlpha = 0.0f);
     void renderUI();
 
     // --- events ---

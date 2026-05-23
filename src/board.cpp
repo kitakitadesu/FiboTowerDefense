@@ -2,44 +2,30 @@
 
 #include <cmath>
 
-Board::Board(const std::string& bgPath) {
-    raylib::Image img(bgPath);
-    imageW_ = static_cast<float>(img.GetWidth());
-    imageH_ = static_cast<float>(img.GetHeight());
-
-    // Boost bg vibrancy (CPU-side, safe before Window)
-    img.ColorContrast(1.3f);
-    img.ColorBrightness(8);
-
-    // Keep processed image for later GPU upload
-    processedImage_ = img;
-    recacheRects();
+Board::Board() {
+    layers_.load("assets");
 }
 
 void Board::loadTexture() {
-    background_.Load(processedImage_);  // GPU upload (needs GL context)
-    processedImage_.Unload();           // CPU copy no longer needed
-    background_.SetFilter(TEXTURE_FILTER_POINT);
+    layers_.upload();
 }
 
 void Board::updateScale(int screenWidth) {
-    scale_ = static_cast<float>(screenWidth) / imageW_;
-    recacheRects();
-}
-
-void Board::recacheRects() {
-    for (int r = 0; r < kRows; ++r)
-        for (int c = 0; c < kCols; ++c)
-            cellRects_[r][c] = {
-                static_cast<int>(std::round((kOriginX + static_cast<float>(c) * kCellW) * scale_)),
-                static_cast<int>(std::round((kOriginY + static_cast<float>(r) * kCellH) * scale_)),
-                static_cast<int>(std::round(kCellW * scale_)),
-                static_cast<int>(std::round(kCellH * scale_))
-            };
+    scale_ = static_cast<float>(screenWidth) / layers_.getWidth();
+    layers_.setScale(scale_);
 }
 
 raylib::Vector2 Board::screenToImage(raylib::Vector2 screen) const {
     return {screen.x / scale_, screen.y / scale_};
+}
+
+CellRect Board::cellRect(int col, int row) const {
+    return {
+        static_cast<int>(std::round((kOriginX + static_cast<float>(col) * kCellW) * scale_)),
+        static_cast<int>(std::round((kOriginY + static_cast<float>(row) * kCellH) * scale_)),
+        static_cast<int>(std::round(kCellW * scale_)),
+        static_cast<int>(std::round(kCellH * scale_))
+    };
 }
 
 int Board::hoveredCell(raylib::Vector2 mouse) const {
@@ -51,14 +37,6 @@ int Board::hoveredCell(raylib::Vector2 mouse) const {
     if (col < 0 || col >= kCols || row < 0 || row >= kRows) return -1;
 
     return col + row * kCols;
-}
-
-void Board::draw() const {
-    const Rectangle src{0.0f, 0.0f, imageW_, imageH_};
-    const Rectangle dst{0.0f, 0.0f,
-                        static_cast<float>(GetScreenWidth()),
-                        static_cast<float>(GetScreenHeight())};
-    background_.Draw(src, dst, {}, 0.0f, raylib::Color::White());
 }
 
 void Board::drawHover(int cellIndex) const {

@@ -63,6 +63,17 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
         }
     }
 
+    // ── cheat: E to skip wave ──
+    if (cheatMode_ && IsKeyPressed(KEY_E)) {
+        for (auto& e : enemies_) {
+            if (e->getState() == Enemy::WALKING)
+                e->takeDamage(99999);
+        }
+        waveMgr_.advanceWave();
+        enemiesKilledThisWave_ = 0;
+        totalEnemiesThisWave_ = waveMgr_.getCurrentWaveEnemyCount();
+    }
+
     // ── turrets fire ──
     {
         std::vector<Enemy*> enemyPtrs;
@@ -242,35 +253,60 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     }
 }
 
-void Level::render(const raylib::Texture* gooseRaw) {
-    grid_.draw();
-
-    // Tower base
-    tower_.draw();
-
-    // Turrets
-    for (const auto& tur : turrets_) {
-        const auto r = grid_.cellRect(tur.getCol(), tur.getRow());
-        const raylib::Vector2 pos(
-            static_cast<float>(r.x + r.w / 2),
-            static_cast<float>(r.y + r.h / 2));
-        tur.draw(gooseRaw, pos);
+static void drawRow(int r, const raylib::Texture* g, const std::vector<Turret>& tur,
+                    const std::vector<SolarCell>& sol, const std::vector<std::unique_ptr<Enemy>>& ene,
+                    const Board& b)
+{
+    for (auto& t : tur) if (t.getRow() == r) {
+        auto cr = b.cellRect(t.getCol(), t.getRow());
+        t.draw(g, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
     }
-
-    // Solar cells
-    for (const auto& sc : solarCells_) {
-        const auto r = grid_.cellRect(sc.getCol(), sc.getRow());
-        sc.draw(gooseRaw, {static_cast<float>(r.x + r.w / 2), static_cast<float>(r.y + r.h / 2)});
+    for (auto& s : sol) if (s.getRow() == r) {
+        auto cr = b.cellRect(s.getCol(), s.getRow());
+        s.draw(g, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
     }
+    for (auto& e : ene) if (e->getRow() == r) e->draw(g);
+}
 
-    // Enemies
-    for (const auto& e : enemies_)
-        e->draw(gooseRaw);
+void Level::render(const raylib::Texture* gooseRaw, const Texture2D* nightMap, float nightAlpha) {
+    // z=0: bg
+    grid_.drawRange(0, 0);
+
+    // Row 0 — behind building_1
+    drawRow(0, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+
+    // z=1: building_1
+    grid_.drawRange(1, 1);
+
+    // Rows 1,2 — hit building_1, behind sign
+    drawRow(1, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+    drawRow(2, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+
+    // z=2: stone_front
+    grid_.drawRange(2, 2);
+
+    // Row 3 — ABOVE stone
+    drawRow(3, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+
+    // z=3: sign, z=4: building_4
+    grid_.drawRange(3, 4);
+
+    // Row 4 — behind building_5
+    drawRow(4, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+
+    // z=5: building_5
+    grid_.drawRange(5, 5);
 
     // Projectiles
-    for (const auto& p : projectiles_)
-        p->draw();
+    for (auto& p : projectiles_) p->draw();
 
+    // Night overlay (from main — drawn on top of everything)
+    if (nightMap != nullptr && nightAlpha > 0.0f) {
+        float sw = float(GetScreenWidth()), sh = float(GetScreenHeight());
+        Rectangle src{0,0,float(nightMap->width),float(nightMap->height)};
+        DrawTexturePro(*nightMap, src, {0,0,sw,sh}, {0,0}, 0.0f,
+                       {255,255,255, static_cast<unsigned char>(nightAlpha)});
+    }
 }
 
 void Level::renderUI() {
@@ -293,12 +329,14 @@ void Level::renderUI() {
     GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED,(int)ColorToInt(Color{255, 160, 40, 255}));
 
     // ── Build mode keyboard shortcuts ──
+    if (!paused_) {
     if (IsKeyPressed(KEY_T)) placingMode_ = BuildMode::ShootTurret;
     if (IsKeyPressed(KEY_M)) placingMode_ = BuildMode::MeleeTurret;
     if (IsKeyPressed(KEY_S)) placingMode_ = BuildMode::SolarCell;
+    }
 
     // ── ESC closes detail panels ──
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    if (!paused_ && IsKeyPressed(KEY_ESCAPE)) {
         if (selectedTurretIdx_ >= 0 || selectedSolarIdx_ >= 0) {
             selectedTurretIdx_ = -1;
             selectedSolarIdx_ = -1;
@@ -308,7 +346,7 @@ void Level::renderUI() {
     }
 
     // ── Right-click cancels build mode ──
-    if (placingMode_ != BuildMode::None && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+    if (!paused_ && placingMode_ != BuildMode::None && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         placingMode_ = BuildMode::None;
     }
 
@@ -365,7 +403,7 @@ void Level::renderUI() {
     } // end !paused_
 
     // ── Unified click handler: select existing or place new ──
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (!paused_ && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         // Skip grid handling when clicking on a visible detail panel
         {
             const raylib::Vector2 mp = GetMousePosition();
@@ -645,7 +683,7 @@ clickHandled:
 
     // ── Hover highlight & ghost (skip when detail panel open) ──
     const bool detailOpen = (selectedTurretIdx_ >= 0 || selectedSolarIdx_ >= 0);
-    if (!detailOpen) {
+    if (!detailOpen && !paused_) {
         const int hov = grid_.hoveredCell(GetMousePosition());
         grid_.drawHover(hov);
 

@@ -15,6 +15,7 @@ enum class GameState {
     Menu,
     Playing,
     Paused,
+    Countdown,
     Won,
     Lost
 };
@@ -70,13 +71,20 @@ private:
     Sprite menuImage_{"assets/GameMenu_edit2.png"};
     std::vector<std::vector<raylib::Vector2>> laneWps_;
 
+    Texture2D nightMapTex_;
+    bool isNight_ = false;
+    float nightAlpha_ = 0.0f;
+    bool boardIsNight_ = false;
+
     Music menuMusic_;
     Music dayMusic_;
-    // Music nightMusic_;
+    Music nightMusic_;
     Music* currentMusic_ = nullptr; // ตัวชี้ว่าตอนนี้เล่นเพลงไหนอยู่
 
     // sfx
     Sound clickSound_;
+    Sound countdownBeep_;
+    int   lastCountdownNum_ = -1;
 
     // Name input on end screen
     char  nameInput_[32] = "";
@@ -84,4 +92,6 @@ private:
     bool  nameEditing_ = false;
 
     void switchMusic(Music* newMusic);
+
+    float countdownTimer_ = 0.0f;
 };

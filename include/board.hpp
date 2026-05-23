@@ -1,27 +1,31 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "raylib-cpp.hpp"
+
+#include "layer.hpp"
 
 /// Screen-space pixel-aligned cell rectangle.
 struct CellRect {
     int x, y, w, h;
 };
 
-/// Visual game board: background image + 9x5 grid overlay with hover.
+/// Visual game board: layered background + 9x5 grid overlay with hover.
 class Board {
 public:
-    explicit Board(const std::string& bgPath);
+    Board();
     ~Board() = default;
-
-    // -- GPU init (call after Window created) --
-    void loadTexture();
 
     Board(const Board&) = delete;
     Board& operator=(const Board&) = delete;
 
-    // -- grid constants (image pixel coords) --
+    void loadTexture();
+
+    /// Toggle night mode (uses pre-loaded night textures).
+    void setNightMode(bool n) { layers_.setNightMode(n); }
+
     static constexpr float kOriginX = 395.0f;
     static constexpr float kOriginY = 262.0f;
     static constexpr float kCellW  = 98.0f;
@@ -29,38 +33,29 @@ public:
     static constexpr int   kCols   = 9;
     static constexpr int   kRows   = 5;
 
-    // -- getters --
     int   getColCount() const { return kCols; }
     int   getRowCount() const { return kRows; }
-    float getImageWidth()  const { return imageW_; }
-    float getImageHeight() const { return imageH_; }
-    float getAspectRatio() const { return imageW_ / imageH_; }
+    float getImageWidth()  const { return layers_.getWidth(); }
+    float getImageHeight() const { return layers_.getHeight(); }
+    float getAspectRatio() const { return layers_.getAspectRatio(); }
 
-    // -- scale (call when window resized) --
     void updateScale(int screenWidth);
 
-    // -- coordinate transforms --
     raylib::Vector2 screenToImage(raylib::Vector2 screen) const;
-    CellRect cellRect(int col, int row) const { return cellRects_[row][col]; }
+    CellRect cellRect(int col, int row) const;
 
-    // -- input --
-    /// Returns flat index (col + row * kCols) or -1 if outside grid.
     int hoveredCell(raylib::Vector2 mouse) const;
 
-    // -- draw --
-    void draw() const;
+    /// Draw layers with z in [minZ, maxZ].
+    void drawRange(int minZ, int maxZ) const { layers_.drawRange(minZ, maxZ); }
     void drawHover(int cellIndex) const;
 
-protected:
+    /// Layer hitboxes (row + X range) for building damage.
+    const std::vector<LayerHitbox>& getHitboxes() const { return layers_.getHitboxes(); }
+    const raylib::Texture* getLayerTexture(const std::string& name) const { return layers_.getTexture(name); }
+    float getScale() const { return scale_; }
 
 private:
-    raylib::Image   processedImage_;
-    raylib::Texture background_;
-    float imageW_;
-    float imageH_;
+    LayerManager layers_;
     float scale_ = 1.0f;
-
-    // Precomputed cell rects (rebuilt on scale change)
-    CellRect cellRects_[kRows][kCols]{};
-    void recacheRects();
 };
