@@ -61,4 +61,5 @@ pages:
   artifacts:
     paths:
       - public
-  # no only/except → runs on all branches
+  only:
+    - main
