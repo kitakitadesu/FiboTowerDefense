@@ -244,46 +244,49 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     }
 }
 
-static void drawRow(int r, const raylib::Texture* g, const std::vector<Turret>& tur,
+static void drawRow(int r, const raylib::Texture* ur3eTex, const raylib::Texture* gooseTex,
+                    const raylib::Texture* solarTex, const std::vector<Turret>& tur,
                     const std::vector<SolarCell>& sol, const std::vector<std::unique_ptr<Enemy>>& ene,
                     const GameBoard& b)
 {
     for (auto& t : tur) if (t.getRow() == r) {
         auto cr = b.cellRect(t.getCol(), t.getRow());
-        t.draw(g, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
+        auto tex = (t.getTurretType() == TurretType::UR3e) ? ur3eTex : gooseTex;
+        t.draw(tex, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
     }
     for (auto& s : sol) if (s.getRow() == r) {
         auto cr = b.cellRect(s.getCol(), s.getRow());
-        s.draw(g, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
+        s.draw(solarTex, {float(cr.x+cr.w/2), float(cr.y+cr.h/2)});
     }
-    for (auto& e : ene) if (e->getRow() == r) e->draw(g);
+    for (auto& e : ene) if (e->getRow() == r) e->draw(gooseTex);
 }
 
-void Level::render(const raylib::Texture* gooseRaw, const Texture2D* nightMap, float nightAlpha) {
+void Level::render(const raylib::Texture* ur3eTex, const raylib::Texture* gooseTex,
+                   const raylib::Texture* solarTex, const Texture2D* nightMap, float nightAlpha) {
     // z=0: bg
     grid_.drawRange(0, 0);
 
     // Row 0 — behind building_1
-    drawRow(0, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+    drawRow(0, ur3eTex, gooseTex, solarTex, turrets_, solarCells_, enemies_, grid_);
 
     // z=1: building_1
     grid_.drawRange(1, 1);
 
     // Rows 1,2 — hit building_1, behind sign
-    drawRow(1, gooseRaw, turrets_, solarCells_, enemies_, grid_);
-    drawRow(2, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+    drawRow(1, ur3eTex, gooseTex, solarTex, turrets_, solarCells_, enemies_, grid_);
+    drawRow(2, ur3eTex, gooseTex, solarTex, turrets_, solarCells_, enemies_, grid_);
 
     // z=2: stone_front
     grid_.drawRange(2, 2);
 
     // Row 3 — ABOVE stone
-    drawRow(3, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+    drawRow(3, ur3eTex, gooseTex, solarTex, turrets_, solarCells_, enemies_, grid_);
 
     // z=3: sign, z=4: building_4
     grid_.drawRange(3, 4);
 
     // Row 4 — behind building_5
-    drawRow(4, gooseRaw, turrets_, solarCells_, enemies_, grid_);
+    drawRow(4, ur3eTex, gooseTex, solarTex, turrets_, solarCells_, enemies_, grid_);
 
     // z=5: building_5
     grid_.drawRange(5, 5);
@@ -388,8 +391,8 @@ void Level::renderUI() {
         const bool affordableMelee = currency_ >= kCostMeleeTurret;
         const bool affordableSolar = currency_ >= kCostSolarCell;
 
-        buildBtn(0, "Tower  (T)  100g", BuildMode::ShootTurret, affordableShoot);
-        buildBtn(1, "Melee  (M)  80g",  BuildMode::MeleeTurret, affordableMelee);
+        buildBtn(0, "UR3e  (T)  100g", BuildMode::ShootTurret, affordableShoot);
+        buildBtn(1, "Goose  (M)  80g",  BuildMode::MeleeTurret, affordableMelee);
         buildBtn(2, "Solar  (S)  60g",  BuildMode::SolarCell,   affordableSolar);
     } // end !paused_
 
@@ -469,10 +472,10 @@ void Level::renderUI() {
                     PlaySound(sfxPlace_);
 
                     if (placingMode_ == BuildMode::ShootTurret) {
-                        addTurret(Turret(col, row, TurretType::Shooting, 0, 1.5f, 25));
+                        addTurret(Turret(col, row, TurretType::UR3e, 0, 1.5f, 25));
                         placements_.place(row, col, PlacementGrid::kTurret);
                     } else if (placingMode_ == BuildMode::MeleeTurret) {
-                        addTurret(Turret(col, row, TurretType::Melee, 120, 1.2f, 35));
+                        addTurret(Turret(col, row, TurretType::Goose, 120, 1.2f, 35));
                         placements_.place(row, col, PlacementGrid::kTurret);
                     } else if (placingMode_ == BuildMode::SolarCell) {
                         addSolarCell(SolarCell(col, row));
@@ -513,7 +516,7 @@ clickHandled:
 
         DrawRectangle(px, py, panelW, pH, {15, 15, 25, 240});
 
-        const char* tn = (selT.getTurretType() == TurretType::Shooting) ? "Shooting Turret" : "Melee Turret";
+        const char* tn = (selT.getTurretType() == TurretType::UR3e) ? "UR3e" : "Goose";
         std::string title = std::string(tn) + "  Lv." + std::to_string(selT.getLevel());
         const int tFs = s(17);
         raylib::DrawText(title.c_str(), px + panelW/2 - MeasureText(title.c_str(), tFs)/2, py + 10, tFs, WHITE);
@@ -536,7 +539,7 @@ clickHandled:
         if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.1f/s", selT.getFireRate() + 0.1f); drawStat("Fire Rate", b1, b2); }
         else drawStat("Fire Rate", b1, nullptr);
 
-        if (selT.getTurretType() == TurretType::Shooting) drawStat("Range", "\xE2\x88\x9E", nullptr);
+        if (selT.getTurretType() == TurretType::UR3e) drawStat("Range", "\xE2\x88\x9E", nullptr);
         else {
             snprintf(b1, sizeof(b1), "%.0f", selT.getRange());
             if (!selT.isMaxLevel()) { snprintf(b2, sizeof(b2), "%.0f", selT.getRange() + 20.0f); drawStat("Range", b1, b2); }
@@ -552,7 +555,7 @@ clickHandled:
             if (GuiButton(ub, lbl) && currency_ >= cost) { currency_ -= cost; turrets_[selectedTurretIdx_].upgrade(); }
             GuiSetState(STATE_NORMAL);
             Rectangle sb{static_cast<float>(px + s(14)), static_cast<float>(btnY + s(35)), static_cast<float>(s(242)), static_cast<float>(s(30))};
-            const int sRefund = (selT.getTurretType() == TurretType::Shooting) ? 50 * selT.getLevel() : 40 * selT.getLevel();
+            const int sRefund = (selT.getTurretType() == TurretType::UR3e) ? 50 * selT.getLevel() : 40 * selT.getLevel();
             snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
             if (GuiButton(sb, lbl)) {
                 sellConfirmIdx_ = selectedTurretIdx_;
@@ -565,7 +568,7 @@ clickHandled:
         } else {
             raylib::DrawText("MAX LEVEL", px + panelW/2 - MeasureText("MAX LEVEL", s(16))/2, btnY + s(6), s(16), GOLD);
             Rectangle sb{static_cast<float>(px + s(14)), static_cast<float>(btnY + s(30)), static_cast<float>(s(242)), static_cast<float>(s(30))};
-            const int sRefund = (selT.getTurretType() == TurretType::Shooting) ? 50 * selT.getLevel() : 40 * selT.getLevel();
+            const int sRefund = (selT.getTurretType() == TurretType::UR3e) ? 50 * selT.getLevel() : 40 * selT.getLevel();
             char lbl[32]; snprintf(lbl, sizeof(lbl), "SELL  (%dg)", sRefund);
             if (GuiButton(sb, lbl)) {
                 sellConfirmIdx_ = selectedTurretIdx_;
@@ -722,7 +725,7 @@ clickHandled:
                 }
             } else {
                 for (const auto& t : turrets_) {
-                    if (t.getCol() == col && t.getRow() == row && t.getTurretType() == TurretType::Melee) {
+                    if (t.getCol() == col && t.getRow() == row && t.getTurretType() == TurretType::Goose) {
                         DrawCircleLines(static_cast<int>(cellPos.x), static_cast<int>(cellPos.y),
                                         120.0f, {255, 255, 255, 150});
                         break;

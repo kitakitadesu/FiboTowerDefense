@@ -65,7 +65,13 @@ private:
     int  cheatIdx_ = 0;
     std::vector<int> cheatSeq_;
 
-    Sprite gooseTex_;
+    // Entity sprites (day/night variants)
+    Sprite ur3eDay_{"assets/ur3e_day_64x64.png"};
+    Sprite ur3eNight_{"assets/ur3e_night_64x64.png"};
+    Sprite gooseDay_{"assets/goose_day_64x64.png"};
+    Sprite gooseNight_{"assets/goose_night_64x64.png"};
+    Sprite solarDay_{"assets/solar_day_64x64.png"};
+    Sprite solarNight_{"assets/solar_night_64x64.png"};
     Sprite menuImage_{"assets/GameMenu_edit2.png"};
     std::vector<std::vector<raylib::Vector2>> laneWps_;
 

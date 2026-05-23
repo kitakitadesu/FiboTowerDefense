@@ -15,8 +15,7 @@ Game::Game()
     : id_(IdGenerator::getNextId()),
       board_(),
       tower_(25),
-      cheatSeq_{KEY_B, KEY_O, KEY_C, KEY_C, KEY_H, KEY_I},
-      gooseTex_("assets/goose_day_0.png")
+      cheatSeq_{KEY_B, KEY_O, KEY_C, KEY_C, KEY_H, KEY_I}
 {
     laneWps_.resize(board_.getRowCount());
     rebuildWaypoints();
@@ -68,7 +67,12 @@ void Game::handleCheatKey(int key) {
 
 void Game::init() {
     board_.loadTexture();
-    gooseTex_.loadTexture();
+    ur3eDay_.loadTexture();
+    ur3eNight_.loadTexture();
+    gooseDay_.loadTexture();
+    gooseNight_.loadTexture();
+    solarDay_.loadTexture();
+    solarNight_.loadTexture();
 
     nightMapTex_ = LoadTexture("assets/map1_night.png");
 
@@ -245,10 +249,14 @@ void Game::render() {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    const raylib::Texture* gooseRaw = &gooseTex_.getTexture();
+    // Pick day or night textures based on board night state
+    const bool night = boardIsNight_;
+    const raylib::Texture* ur3eTex  = &(night ? ur3eNight_ : ur3eDay_).getTexture();
+    const raylib::Texture* gooseTex = &(night ? gooseNight_ : gooseDay_).getTexture();
+    const raylib::Texture* solarTex = &(night ? solarNight_ : solarDay_).getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(gooseRaw, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
+        currentLevel_->render(ur3eTex, gooseTex, solarTex, boardIsNight_ ? nullptr : &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }

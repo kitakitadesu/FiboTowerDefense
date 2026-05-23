@@ -14,10 +14,10 @@
 class Enemy;
 class Projectile;
 
-/// Turret type: Shooting (ranged, unlimited range rightward) vs Melee (short range, tanky).
+/// Turret type: UR3e (ranged, unlimited range rightward) vs Goose (short range, tanky).
 enum class TurretType {
-    Shooting,
-    Melee
+    UR3e,
+    Goose
 };
 
 /// A placed turret that auto-attacks enemies in its row. Upgradable to level 5.
@@ -27,7 +27,7 @@ public:
 
     int getId() const override { return id_; }
     std::string getDisplayName() const override {
-        return (type_ == TurretType::Shooting) ? "Shooting Turret" : "Melee Turret";
+        return (type_ == TurretType::UR3e) ? "UR3e" : "Goose";
     }
 
     /// ISprite::draw() — lightweight stub (position-dependent draw uses overload below).
@@ -54,8 +54,8 @@ public:
     float getMaxHp()    const { return maxHp_; }
     TurretType getTurretType() const { return type_; }
     float getRange() const {
-        return (type_ == TurretType::Shooting) ? 9999.0f
-                                               : baseRange_ + (level_ - 1) * 20.0f;
+        return (type_ == TurretType::UR3e) ? 9999.0f
+                                           : baseRange_ + (level_ - 1) * 20.0f;
     }
 
     // --- upgrade ---
