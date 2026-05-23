@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 #include <entt/entt.hpp>
@@ -27,6 +29,13 @@ enum class BuildMode {
 
 struct EnemyKilledEvent {
     raylib::Vector2 position;
+};
+
+/// Floating wave-announcement banner state.
+struct WaveAnnouncement {
+    std::string text;
+    float life = 3.0f;
+    float maxLife = 3.0f;
 };
 
 /// Container for all gameplay entities in one level.
@@ -120,4 +129,15 @@ private:
     int solarPlaced_       = 0;
     bool cheatMode_ = false;
     BuildMode placingMode_ = BuildMode::None;
+
+    // Wave announcement
+    std::optional<WaveAnnouncement> waveAnnounce_;
+
+    // Sell confirm
+    int sellConfirmIdx_ = -1;
+    bool sellConfirmIsTurret_ = true;
+    int sellConfirmGold_ = 0;
+    float sellConfirmTimer_ = 0.0f;
+    int sellConfirmSelCol_ = 0;
+    int sellConfirmSelRow_ = 0;
 };

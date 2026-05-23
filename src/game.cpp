@@ -169,86 +169,56 @@ void Game::render() {
     if (state_ == GameState::Menu) {
         static Texture2D menuImage = LoadTexture("assets/GameMenu_edit2.png");
 
-        float screenW = (float)GetScreenWidth();
-        float screenH = (float)GetScreenHeight();
+        const float screenW = static_cast<float>(GetScreenWidth());
+        const float screenH = static_cast<float>(GetScreenHeight());
+        const Rectangle sourceRec = {0.0f, 0.0f, static_cast<float>(menuImage.width), static_cast<float>(menuImage.height)};
+        const Rectangle destRec = {0.0f, 0.0f, screenW, screenH};
+        DrawTexturePro(menuImage, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
 
-        // บีบภาพให้พอดีหน้าจอ
-        Rectangle sourceRec = { 0.0f, 0.0f, (float)menuImage.width, (float)menuImage.height };
-        Rectangle destRec = { 0.0f, 0.0f, screenW, screenH };
-        Vector2 origin = { 0.0f, 0.0f };
-        DrawTexturePro(menuImage, sourceRec, destRec, origin, 0.0f, WHITE);
+        // Start button (image-based hot zone)
+        const Rectangle startBtnBounds = {screenW / 2 - 130, screenH / 2 + 28, 253, 88};
+        const Rectangle quitBtnBounds  = {screenW / 2 - 130, screenH / 2 + 139, 253, 78};
+        const Vector2 mousePos = GetMousePosition();
+        const bool hoverStart = CheckCollisionPointRec(mousePos, startBtnBounds);
+        const bool hoverQuit  = CheckCollisionPointRec(mousePos, quitBtnBounds);
+        const bool pressEnter = IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE);
 
-        Rectangle startBtnBounds = { screenW / 2 - 130, screenH / 2 + 28, 253, 88 }; 
-        Rectangle quitBtnBounds = { screenW / 2 - 130, screenH / 2 + 139, 253, 78 };  
-
-        Vector2 mousePos = GetMousePosition();
-
-        // --- 2. เช็คปุ่ม Start (เมาส์ชี้และกด) ---
-        if (CheckCollisionPointRec(mousePos, startBtnBounds)) {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-                DrawRectangleRec(startBtnBounds, { 0, 0, 0, 80 }); 
-            } 
-            else {
-                DrawRectangleRec(startBtnBounds, { 209, 209, 209, 80 }); 
-            }
-
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-                start();
-            }
+        // Start button visual feedback
+        if (hoverStart || pressEnter) {
+            const bool pressing = (pressEnter || IsMouseButtonDown(MOUSE_LEFT_BUTTON));
+            DrawRectangleRec(startBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
         }
+        // Quit button visual feedback
+        if (hoverQuit && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            DrawRectangleRec(quitBtnBounds, {0, 0, 0, 80});
 
-        // --- เช็คปุ่ม Quit (เมาส์ชี้และกด) ---
-        if (CheckCollisionPointRec(mousePos, quitBtnBounds)) {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-                DrawRectangleRec(quitBtnBounds, { 0, 0, 0, 80 }); 
-            } else {
-                DrawRectangleRec(quitBtnBounds, { 209, 209, 209, 80 });
-            }
-
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-                running_ = false;
-            }
-        }
-
-        // --- 2. เช็คปุ่ม Start (เมาส์ชี้, เมาส์คลิก และ คีย์บอร์ด) ---
-        bool isHoveringStart = CheckCollisionPointRec(mousePos, startBtnBounds);
-        bool isPressingKey = IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE);
-        bool isClickingStart = isHoveringStart && IsMouseButtonDown(MOUSE_LEFT_BUTTON);
-
-        if (isClickingStart || isPressingKey) {
-            // ถ้ากำลังคลิกซ้ายค้าง หรือ กด Enter/Space ค้างไว้ -> ทับด้วยสีดำ
-            DrawRectangleRec(startBtnBounds, { 0, 0, 0, 80 }); 
-        } 
-        else if (isHoveringStart) {
-            // ถ้าแค่เอาเมาส์ชี้เฉยๆ -> ทับด้วยสีขาว
-            DrawRectangleRec(startBtnBounds, { 209, 209, 209, 80 }); 
-        }
-
-        // ตรวจสอบจังหวะ "ปล่อย" ปุ่ม (ปล่อยคลิกซ้าย หรือ ปล่อย Enter/Space) ค่อยเริ่มเกม
-        if ((isHoveringStart && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) || 
-            IsKeyReleased(KEY_ENTER) || IsKeyReleased(KEY_SPACE)) {
+        // Triggers on release
+        if ((hoverStart && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) ||
+            IsKeyReleased(KEY_ENTER) || IsKeyReleased(KEY_SPACE))
             start();
-        }
-
-        // --- เช็คปุ่ม Quit (เมาส์ชี้และกด) ---
-        if (CheckCollisionPointRec(mousePos, quitBtnBounds)) {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-                DrawRectangleRec(quitBtnBounds, { 0, 0, 0, 80 }); 
-            } else {
-                DrawRectangleRec(quitBtnBounds, { 209, 209, 209, 80 });
-            }
-
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-                running_ = false;
-            }
-        }
-
-        // --- เช็คกรอบสีแดง  ---
-        // DrawRectangleLinesEx(startBtnBounds, 2, RED);
-        // DrawRectangleLinesEx(quitBtnBounds, 2, RED);
+        if (hoverQuit && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+            running_ = false;
     }
 
-    // ── Pause ──
+    // ── Pause button (always visible when playing/paused) ──
+    if (state_ == GameState::Playing || state_ == GameState::Paused) {
+        const int btnS = 36;
+        const int btnX = GetScreenWidth() - btnS - 15;
+        const int btnY = 15;
+        const char* icon = (state_ == GameState::Paused) ? "\xE2\x96\xB6" : "\xE2\x96\xB6\xE2\x96\xB6";
+
+        DrawRectangleRounded({static_cast<float>(btnX), static_cast<float>(btnY),
+                              static_cast<float>(btnS), static_cast<float>(btnS)},
+                             0.2f, 8, {0, 0, 0, 180});
+        raylib::DrawText(icon, btnX + 8, btnY + 6, 20, WHITE);
+
+        if (GuiButton({static_cast<float>(btnX), static_cast<float>(btnY),
+                       static_cast<float>(btnS), static_cast<float>(btnS)}, "")) {
+            state_ = (state_ == GameState::Paused) ? GameState::Playing : GameState::Paused;
+        }
+    }
+
+    // ── Pause overlay ──
     if (state_ == GameState::Paused) {
         const int w = GetScreenWidth(), h = GetScreenHeight();
         const int cx = w / 2, cy = h / 2;
