@@ -70,9 +70,13 @@ private:
     Sprite menuImage_{"assets/GameMenu_edit2.png"};
     std::vector<std::vector<raylib::Vector2>> laneWps_;
 
+    Texture2D nightMapTex_;
+    bool isNight_ = false;
+    float nightAlpha_ = 0.0f;
+    
     Music menuMusic_;
     Music dayMusic_;
-    // Music nightMusic_;
+    Music nightMusic_;
     Music* currentMusic_ = nullptr; // ตัวชี้ว่าตอนนี้เล่นเพลงไหนอยู่
 
     // sfx

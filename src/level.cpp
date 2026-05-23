@@ -224,9 +224,19 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
     }
 }
 
-void Level::render(const raylib::Texture* gooseRaw) {
+void Level::render(const raylib::Texture* gooseRaw, const Texture2D* nightMap, float nightAlpha) {
     grid_.draw();
 
+    if (nightMap != nullptr && nightAlpha > 0.0f) {
+        float screenW = static_cast<float>(GetScreenWidth());
+        float screenH = static_cast<float>(GetScreenHeight());
+        Rectangle srcRec = {0.0f, 0.0f, static_cast<float>(nightMap->width), static_cast<float>(nightMap->height)};
+        Rectangle destRec = {0.0f, 0.0f, screenW, screenH};
+        
+        DrawTexturePro(*nightMap, srcRec, destRec, {0.0f, 0.0f}, 0.0f, 
+                       {255, 255, 255, static_cast<unsigned char>(nightAlpha)});
+    }
+    
     // Tower base
     tower_.draw();
 

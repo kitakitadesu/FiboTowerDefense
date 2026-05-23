@@ -21,7 +21,9 @@ Game::Game()
 Game::~Game() {
     UnloadMusicStream(menuMusic_);
     UnloadMusicStream(dayMusic_);
-    // UnloadMusicStream(nightMusic_);
+    UnloadMusicStream(nightMusic_);
+
+    UnloadTexture(nightMapTex_);
 
     UnloadSound(clickSound_);
 }
@@ -58,10 +60,12 @@ void Game::init() {
     board_.loadTexture();
     gooseTex_.loadTexture();
 
+    nightMapTex_ = LoadTexture("assets/map1_night.png");
+    
     menuImage_.loadTexture();
     menuMusic_ = LoadMusicStream("assets/dayMusic_Signal_at_the_Tower.mp3");
     dayMusic_ = LoadMusicStream("assets/menuMusic_Clocktower_Circuit.mp3");
-    // nightMusic_ = LoadMusicStream("assets/bgm_night.mp3");
+    nightMusic_ = LoadMusicStream("assets/nightMusic_Midnight_Campus_Siege.mp3");
 
     clickSound_ = LoadSound("assets/toggle_002.ogg");
 
@@ -71,6 +75,8 @@ void Game::init() {
 }
 
 void Game::start() {
+    isNight_ = false;
+    nightAlpha_ = 0.0f;
     // ถ้าอนาคตมีด่านกลางคืน ค่อยเขียน if เช็คตรงนี้
     switchMusic(&dayMusic_);
 
@@ -155,6 +161,26 @@ void Game::update(float dt) {
     if (state_ == GameState::Playing && currentLevel_) {
         currentLevel_->update(dt, laneWps_);
 
+        int currentWave = currentLevel_->getWaveManager().getCurrentWave();
+        bool shouldBeNight = (currentWave / 10) % 2 == 1; 
+
+        if (shouldBeNight != isNight_) {
+            isNight_ = shouldBeNight;
+            if (isNight_) switchMusic(&nightMusic_);
+            else switchMusic(&dayMusic_);
+        }
+
+        float fadeSpeed = 100.0f; 
+        float targetAlpha = isNight_ ? 255.0f : 0.0f;
+        
+        if (nightAlpha_ < targetAlpha) {
+            nightAlpha_ += fadeSpeed * dt;
+            if (nightAlpha_ > targetAlpha) nightAlpha_ = targetAlpha;
+        } else if (nightAlpha_ > targetAlpha) {
+            nightAlpha_ -= fadeSpeed * dt;
+            if (nightAlpha_ < targetAlpha) nightAlpha_ = targetAlpha;
+        }
+
         if (currentLevel_->isTowerDestroyed()) {
             state_ = GameState::Lost;
         } else if (currentLevel_->getWaveManager().allWavesDone() &&
@@ -171,7 +197,7 @@ void Game::render() {
     const raylib::Texture* gooseRaw = &gooseTex_.getTexture();
 
     if (currentLevel_) {
-        currentLevel_->render(gooseRaw);
+        currentLevel_->render(gooseRaw, &nightMapTex_, nightAlpha_);
         currentLevel_->setPaused(state_ == GameState::Paused);
         currentLevel_->renderUI();
     }
