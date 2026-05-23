@@ -11,7 +11,7 @@
 std::vector<raylib::Vector2> buildLaneWaypoints(const GameBoard& board, int row) {
     std::vector<raylib::Vector2> wps;
 
-    const float margin = 80.0f;
+    const float margin = 250.0f;
     const int   cols   = board.getColCount();
 
     // Entry at right side
