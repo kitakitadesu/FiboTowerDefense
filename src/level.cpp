@@ -303,26 +303,13 @@ void Level::renderUI() {
             if (active) {
                 GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, (int)ColorToInt(Color{255, 140, 20, 255}));
                 GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, (int)ColorToInt(WHITE));
-<<<<<<< HEAD
-                if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
-                               static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
-                    PlaySound(sfxSelect_);
-                    placingMode_ = BuildMode::None;
-                }
-                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ob);
-                GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ot);
-            } else {
-                if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
-                               static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
-                    PlaySound(sfxSelect_);
-                    placingMode_ = mode;
-                }
-=======
->>>>>>> 4679994867711bc895dccc70384248f6bb6bf17b
             }
 
             if (GuiButton({static_cast<float>(bx), static_cast<float>(by),
                            static_cast<float>(kBtnW), static_cast<float>(kBtnH)}, label)) {
+                
+                PlaySound(sfxSelect_);
+                
                 if (active) placingMode_ = BuildMode::None;
                 else placingMode_ = mode;
             }
