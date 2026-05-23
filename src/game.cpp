@@ -21,6 +21,8 @@ Game::~Game() {
     UnloadMusicStream(menuMusic_);
     UnloadMusicStream(dayMusic_);
     // UnloadMusicStream(nightMusic_);
+
+    UnloadSound(clickSound_);
 }
 
 void Game::switchMusic(Music* newMusic) {
@@ -58,6 +60,8 @@ void Game::init() {
     menuMusic_ = LoadMusicStream("assets/dayMusic_Signal_at_the_Tower.mp3");
     dayMusic_ = LoadMusicStream("assets/menuMusic_Clocktower_Circuit.mp3");
     // nightMusic_ = LoadMusicStream("assets/bgm_night.mp3");
+
+    clickSound_ = LoadSound("assets/toggle_002.ogg");
 
     switchMusic(&menuMusic_);
 }
@@ -183,21 +187,36 @@ void Game::render() {
         const bool hoverQuit  = CheckCollisionPointRec(mousePos, quitBtnBounds);
         const bool pressEnter = IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE);
 
+        float time = (float)GetTime();
+        unsigned char textAlpha = (unsigned char)((cos(time * 4.0f) + 1.0f) * 127.5f);
+        DrawText("WAITING FOR PLAYER...", 20, screenH - 40, 20, { 255, 255, 255, textAlpha });
+
         // Start button visual feedback
         if (hoverStart || pressEnter) {
             const bool pressing = (pressEnter || IsMouseButtonDown(MOUSE_LEFT_BUTTON));
             DrawRectangleRec(startBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
         }
         // Quit button visual feedback
-        if (hoverQuit && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-            DrawRectangleRec(quitBtnBounds, {0, 0, 0, 80});
+        if (hoverQuit) {
+            const bool pressing = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+            DrawRectangleRec(quitBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
+        }
 
         // Triggers on release
         if ((hoverStart && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) ||
             IsKeyReleased(KEY_ENTER) || IsKeyReleased(KEY_SPACE))
+        {
+            PlaySound(clickSound_);
             start();
+        }
         if (hoverQuit && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        {
+            PlaySound(clickSound_);
+            while (IsSoundPlaying(clickSound_)) {
+                WaitTime(0.01f); 
+            }
             running_ = false;
+        }
     }
 
     // ── Pause button (always visible when playing/paused) ──

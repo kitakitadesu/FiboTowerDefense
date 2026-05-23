@@ -74,5 +74,8 @@ private:
     // Music nightMusic_;
     Music* currentMusic_ = nullptr; // ตัวชี้ว่าตอนนี้เล่นเพลงไหนอยู่
 
+    // sfx
+    Sound clickSound_;
+
     void switchMusic(Music* newMusic);
 };
