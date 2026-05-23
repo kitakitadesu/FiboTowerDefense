@@ -263,11 +263,13 @@ void Game::renderEndScreen() {
 
     const int cx = GetScreenWidth() / 2, cy = GetScreenHeight() / 2;
     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL,   (int)ColorToInt(Color{50, 50, 60, 255}));
-    GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL,   (int)ColorToInt(Color{220, 220, 220, 255}));
+    GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL,   (int)ColorToInt(Color{200, 200, 210, 255}));
     GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, (int)ColorToInt(Color{80, 80, 90, 255}));
-    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED,  (int)ColorToInt(Color{70, 70, 80, 255}));
+    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED,  (int)ColorToInt(Color{70, 65, 55, 255}));
     GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED,  (int)ColorToInt(Color{255, 255, 255, 255}));
     GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED,(int)ColorToInt(Color{255, 140, 20, 255}));
+    GuiSetStyle(BUTTON, BASE_COLOR_PRESSED,  (int)ColorToInt(Color{80, 70, 55, 255}));
+    GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED,  (int)ColorToInt(Color{255, 255, 220, 255}));
     GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED,(int)ColorToInt(Color{255, 160, 40, 255}));
     DrawRectangle(cx - 210, cy - 150, 420, 370, {25, 25, 35, 255});
 
