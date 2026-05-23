@@ -20,8 +20,6 @@ Level::Level(Board& grid, Tower& tower, Scoreboard& scoreboard)
     : id_(IdGenerator::getNextId()), grid_(grid), tower_(tower), scoreboard_(scoreboard),
       waveMgr_(grid)
 {
-    listenToEvents();
-
     sfxSelect_ = LoadSound("assets/select_006.ogg");
     sfxPlace_  = LoadSound("assets/drop_001.ogg");
     sfxError_  = LoadSound("assets/error_008.ogg");
@@ -30,10 +28,6 @@ Level::~Level() {
     UnloadSound(sfxSelect_);
     UnloadSound(sfxPlace_);
     UnloadSound(sfxError_);
-}
-
-void Level::listenToEvents() {
-    // Reserved for Phase 3+ boss/powerup event wiring
 }
 
 bool Level::spendCurrency(int amt) {
@@ -170,7 +164,6 @@ void Level::update(float dt, const std::vector<std::vector<raylib::Vector2>>& la
                 "+" + std::to_string(e->getReward()),
                 GOLD, 1.0f, 1.0f, {0.0f, -40.0f}
             });
-            events_.trigger(EnemyKilledEvent{e->getPosition()});
         }
         if (e->isEscaped()) {
             if (!cheatMode_)

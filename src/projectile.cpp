@@ -4,7 +4,7 @@
 #include <cmath>
 
 Projectile::Projectile(raylib::Vector2 start, Enemy* target, float speed, int damage)
-    : pos_(start), target_(target), speed_(speed), damage_(damage)
+    : id_(IdGenerator::getNextId()), pos_(start), target_(target), speed_(speed), damage_(damage)
 {}
 
 bool Projectile::update(float dt) {

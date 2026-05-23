@@ -40,8 +40,8 @@ std::vector<raylib::Vector2> buildLaneWaypoints(const Board& board, int row) {
 // Enemy implementation
 // ------------------------------------------------------------------
 Enemy::Enemy(int row, int hp, float speed, int reward)
-    : row_(row), hp_(static_cast<float>(hp)), maxHp_(static_cast<float>(hp)),
-      speed_(speed), reward_(reward)
+    : id_(IdGenerator::getNextId()), row_(row), hp_(static_cast<float>(hp)),
+      maxHp_(static_cast<float>(hp)), speed_(speed), reward_(reward)
 {}
 
 void Enemy::update(float dt, const std::vector<raylib::Vector2>& waypoints) {

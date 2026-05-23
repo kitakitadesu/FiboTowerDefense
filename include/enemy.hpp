@@ -1,8 +1,14 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "raylib-cpp.hpp"
+
+#include "id_generator.hpp"
+#include "identifier.hpp"
+#include "idisplay_name.hpp"
+#include "isprite.hpp"
 
 class Board;
 
@@ -10,21 +16,20 @@ class Board;
 std::vector<raylib::Vector2> buildLaneWaypoints(const Board& board, int row);
 
 /// Lane-based enemy that walks from right to left along a row (PvZ-style).
-class Enemy {
+class Enemy : public IIdentifier, public IDisplayName, public ISprite {
 public:
     enum State { WALKING, DYING, DEAD, ESCAPED };
 
-    /// @param row       Grid row (lane) this enemy walks in
-    /// @param hp        Hit points
-    /// @param speed     Movement speed (pixels/sec)
-    /// @param reward    Gold given on kill
     Enemy(int row, int hp, float speed, int reward);
 
+    int getId() const override { return id_; }
+    std::string getDisplayName() const override { return "Enemy"; }
+
+    // ISprite
+    void draw() const override {}
+    void draw(const raylib::Texture* tex) const;  // overload with texture
+
     void update(float dt, const std::vector<raylib::Vector2>& waypoints);
-
-    /// Draw at current position using the shared texture.
-    void draw(const raylib::Texture* tex) const;
-
     void takeDamage(int dmg);
 
     void spawnAt(const raylib::Vector2& pos) {
@@ -46,6 +51,7 @@ public:
     float getRadius() const { return 20.0f; }  ///< collision radius
 
 private:
+    int   id_;
     int   row_;
     int   waypointIdx_ = 0;
     float hp_;
