@@ -116,7 +116,8 @@ void Game::resetForRestart() {
 void Game::update(float dt) {
     if (!running_) return;
 
-    if (currentMusic_ != nullptr) {
+    // ── update music stream only when playing or on menu ──
+    if (currentMusic_ != nullptr && (state_ == GameState::Playing || state_ == GameState::Menu)) {
         UpdateMusicStream(*currentMusic_);
     }
 
