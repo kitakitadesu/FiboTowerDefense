@@ -197,8 +197,10 @@ void Game::render() {
             DrawRectangleRec(startBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
         }
         // Quit button visual feedback
-        if (hoverQuit && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-            DrawRectangleRec(quitBtnBounds, {0, 0, 0, 80});
+        if (hoverQuit) {
+            const bool pressing = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+            DrawRectangleRec(quitBtnBounds, pressing ? Color{0, 0, 0, 80} : Color{209, 209, 209, 80});
+        }
 
         // Triggers on release
         if ((hoverStart && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) ||
